@@ -1,0 +1,93 @@
+{% extends 'admin_templates/base_template.html' %}
+
+{% block page_title %}
+    Add Subject
+{% endblock page_title %}
+
+{% block main_content %}
+
+{% load static %}
+
+<section class="content">
+        <div class="container-fluid">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <!-- general form elements -->
+                    <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Add Subject</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form role="form" method="POST" action="#">
+                        {% csrf_token %}
+
+                        
+                                {% comment %} Display Messages {% endcomment %}
+                                {% if messages %}
+                                <div class="form-group">
+                                <div class="col-12">
+                                    {% for message in messages %}
+                                    {% if message.tags == "error" %}
+                                        <div class="alert alert-danger alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                                        {{ message }}
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+                                    {% elif message.tags == "success" %}
+                                        <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                                        {{ message }}
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                </div>
+                                {% endif %}
+                            
+
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Subject Name </label>
+                                <input type="text" class="form-control" name="subject_name" placeholder="Enter Subject">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Course </label>
+                                <select class="form-control" name="course_id">
+                                    {% for course in courses %}
+                                        <option value="{{ course.id }}">{{ course.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Staff </label>
+                                <select class="form-control" name="staff_id">
+                                    {% for staff in staff_members %}
+                                        <option value="{{ staff.id }}">{{ staff.first_name }} {{ staff.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">Add Subject</button>
+                        </div>
+                    </form>
+                    </div>
+                    <!-- /.card -->
+
+                </div>
+            </div>
+
+        </div><!-- /.container-fluid -->
+      </section>
+
+  {% endblock main_content %}

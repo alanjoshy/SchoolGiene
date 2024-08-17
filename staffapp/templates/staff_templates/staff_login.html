@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Login form</title>
+
+    <!-- Font Icon -->
+    <link rel="stylesheet" href="{% static 'fonts/material-icon/css/material-design-iconic-font.min.css' %}">
+
+    <!-- Main css -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+    <div class="main">
+
+        <!-- Sing in  Form -->
+        <section class="sign-in">
+            <div class="container">
+                <div class="signin-content">
+                    <div class="signin-image">
+
+                        
+                    </div>
+
+                    <div class="signin-form">
+                        <h2 class="form-title">staff log In</h2>
+
+
+
+                        <form action="{% url 'staff_login' %}" method="POST" class="register-form">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="your_name"><i class="zmdi zmdi-account material-icons-name"></i></label>
+                                <input type="text" name="username" id="username" placeholder="Enter Your userName" />
+                            </div>
+                            <div class="form-group">
+                                <label for="your_pass"><i class="zmdi zmdi-lock"></i></label>
+                                <input type="password" name="password" id="password" placeholder="Enter Your Password" />
+                            </div>
+                           
+                            {% if messages %}
+                        
+                            {% for message in messages %}
+                                {{ message }}
+    
+                        {% endfor %}
+                            
+                        {% endif %}
+                            <div class="form-group form-button">
+                                <input type="submit" name="signin" id="signin" class="form-submit" value="Log in" />
+                            </div> 
+                            
+                        </form> 
+                            <!-- staff register button   -->
+                            <form  action="{% url 'staff_register' %}">
+                                <!-- Form fields go here -->
+                                <div class="form-group form-button">
+                                    <input type="submit" name="signin" id="signin" class="form-submit" value="Register new staff" />
+                                </div>
+                            </form>
+
+                            <form  action="{% url 'home' %}"> 
+                                {% csrf_token %}
+                                <!-- Form fields go here -->
+                                <div class="form-group form-button">
+                                    <input type="submit" name="signin" id="signin" class="form-submit" value="Home" />
+                                </div>
+                            </form>
+                             
+
+                        
+
+                        
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- JS -->
+    
+</body>
+</html>

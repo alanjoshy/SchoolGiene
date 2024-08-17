@@ -1,0 +1,95 @@
+{% extends 'staff_templates/base_template.html' %}
+
+{% block page_title %}
+    Take Attendance
+{% endblock page_title %}
+
+{% block main_content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Take Attendance</h3>
+                    </div>
+                    <!-- /.card-header -->
+
+                    {% comment %} Display Messages {% endcomment %}
+                    {% if messages %}
+                    <div class="form-group">
+                        <div class="col-12">
+                            {% for message in messages %}
+                            {% if message.tags == "error" %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                                    {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            {% elif message.tags == "success" %}
+                                <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                                    {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Subject </label>
+                                <select class="form-control" name="subject" id="subject">
+                                    {% for subject in subjects %}
+                                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Attendance Date: </label>
+                                <input type="date" name="attendance_date" id="attendance_date" class="form-control" />
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    
+                        <div class="card-footer">
+                            <button type="submit" name="fetch_student" class="btn btn-primary">Fetch Students</button>
+                            <button type="submit" name="save_attendance" class="btn btn-success">Save Attendance Data</button>
+                        </div>
+                    
+                        {% if students %}
+                        <div class="card-footer" id="student_data">
+                            <div class="form-group">
+                                <label>Mark Attendance:</label>
+                                <div class="row">
+                                    {% for student in students %}
+                                    <div class="col-lg-2">
+                                        <div class="form-check">
+                                            <input type="checkbox" name="student_data[]" value="{{ student.id }}" />
+                                            <label class="form-check-label">{{ student.name }} ({{ student.username }})</label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
+                    
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+
+{% endblock main_content %}

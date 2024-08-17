@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Registration</title>
+    <!-- Font Icon -->
+    <link rel="stylesheet" href="{% static 'fonts/material-icon/css/material-design-iconic-font.min.css' %}">
+    <!-- Main css -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+    
+    <!-- Sign up form -->
+    <div class="main">
+        <section class="signup">
+            <div class="container">
+                <div class="signup-content">
+                    <div class="signup-form">
+                        <h2 class="form-title">Student Registration</h2>
+
+                        <!-- form starts here -->
+                        <form action="{% url 'student_register' %}" method="POST" class="register" id="register" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <!-- Name -->
+                            <div class="form-group">
+                                <label for="name"><i class="zmdi zmdi-account material-icons-name"></i></label>
+                                <input type="text" name="name" id="name" placeholder="Your Name" required />
+                            </div>
+                            <!-- Username -->
+                            <div class="form-group">
+                                <label for="username"><i class="zmdi zmdi-account material-icons-name"></i></label>
+                                <input type="text" name="username" id="username" placeholder="Your Username" required />
+                            </div>
+                            <!-- Email -->
+                            <div class="form-group">
+                                <label for="email"><i class="zmdi zmdi-email"></i></label>
+                                <input type="email" name="email" id="email" placeholder="Your Email" required />
+                            </div>
+                            <!-- Phone -->
+                            <div class="form-group">
+                                <label for="phone"><i class="zmdi zmdi-phone"></i></label> 
+                                <input type="text" name="phone" id="phone" placeholder="Your Phone Number" required />
+                            </div>
+                            <!-- Address -->
+                            <div class="form-group">
+                                <label for="address"><i class="zmdi zmdi-home"></i></label>
+                                <input type="text" name="address" id="address" placeholder="Your Address" required />
+                            </div>
+                            <!-- Photo -->
+                            <div class="form-group">
+                                <label for="photo"><i class="zmdi zmdi-image"></i></label>
+                                <input type="file" name="photo" id="photo" required />
+                            </div>
+                            <!-- Password1 -->
+                            <div class="form-group">
+                                <label for="password1"><i class="zmdi zmdi-lock"></i></label>
+                                <input type="password" name="password1" id="password1" placeholder="Password" required />
+                            </div>
+                            <!-- Password2 -->
+                            <div class="form-group">
+                                <label for="password2"><i class="zmdi zmdi-lock-outline"></i></label>
+                                <input type="password" name="password2" id="password2" placeholder="Repeat Your Password" required />
+                            </div>
+
+                            <div class="form-group form-button">
+                                <input type="submit" name="signup" id="signup" class="form-submit" value="Submit to Admin" />
+                            </div>
+                        </form>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>
