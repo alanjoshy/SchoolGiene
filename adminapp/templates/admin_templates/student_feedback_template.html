@@ -1,0 +1,69 @@
+{% extends 'admin_templates/base_template.html' %}
+{% block page_title %}
+    Student Feedback
+{% endblock page_title %}
+
+{% block main_content %}
+
+{% load static %}
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Student Feedback</h3>
+                    </div>
+                    <!-- /.card-header -->
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Student ID</th>
+                                    <th>Student Name</th>
+                                    <th>Student Session</th>
+                                    <th>Message</th>
+                                    <th>Sended On</th>
+                                    <th>Reply</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feedback in feedbacks %}
+                                <tr>
+                                    <td>{{ feedback.id }}</td>
+                                    <td>{{ feedback.student_id.admin.id }}</td>
+                                    <td>{{ feedback.student_id.admin.first_name }} {{ feedback.student_id.admin.last_name }}</td>
+                                    <td>{{ feedback.student_id.session_year_id.session_start_year }} - {{ feedback.student_id.session_year_id.session_end_year }}</td>
+                                    <td>{{ feedback.feedback }}</td>
+                                    <td>{{ feedback.created_at }}</td>
+                                    <td>
+                                        {% if feedback.feedback_reply %}
+                                            {{ feedback.feedback_reply }}
+                                        {% else %}
+                                            <!-- Form for replying to feedback -->
+                                            <form method="POST" action="{% url 'admin_student_feedback' %}">  
+                                                {% csrf_token %}
+                                                <input type="hidden" name="feedback_id" value="{{ feedback.id }}" />
+                                                <textarea name="reply" class="form-control" rows="3" placeholder="Write your reply here..."></textarea>
+                                                <button type="submit" class="btn btn-primary btn-block mt-2">Reply</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+
+{% endblock main_content %}

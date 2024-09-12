@@ -1,4 +1,4 @@
-{% extends 'hod_template/base_template.html' %}
+{% extends 'admin_templates/base_template.html' %}
 
 {% block page_title %}
     View Attendance
@@ -137,7 +137,7 @@
                 //console.log(session_year_id)
 
                 $.ajax({
-                    url:'{% url 'admin_get_attendance_dates' %}',
+                    url:'#',
                     type:'POST',
                     data:{subject:subject, session_year_id:session_year_id},
                 })
@@ -191,7 +191,7 @@
             var attendance_date=$("#attendance_date").val()
 
             $.ajax({
-                url:'{% url 'admin_get_attendance_student' %}',
+                url:'#',
                 type:'POST',
                 data:{attendance_date:attendance_date},
             })

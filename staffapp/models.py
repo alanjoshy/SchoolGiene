@@ -1,5 +1,5 @@
 from django.db import models
-from adminapp.models import SchoolUser , Subject
+from adminapp.models import  SchoolUser , Subject , Exam 
 from django.utils import timezone
 from django.db.models import Count, Q
 
@@ -30,5 +30,8 @@ def get_attendance_statistics(student):
         "total_classes": total_classes,
         "attendance_percentage": (total_present / total_days * 100) if total_days > 0 else 0
     }
+
+
+
 
 

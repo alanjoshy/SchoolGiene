@@ -17,7 +17,7 @@ Student Home
                 <!-- small box -->
                 <div class="small-box bg-info">
                     <div class="inner">
-                        <h3>{{ attendance_stats.total_present }}</h3>
+                        <h3>{{ total_present_days }}</h3>
 
                         <p>Total Attendance</p>
                     </div>
@@ -32,7 +32,7 @@ Student Home
                 <!-- small box -->
                 <div class="small-box bg-success">
                     <div class="inner">
-                        <h3>{{ attendance_stats.total_absent }}</h3>
+                        <h3>{{ total_absent_days }}</h3>
 
                         <p>Absent</p>
                     </div>
@@ -47,7 +47,7 @@ Student Home
                 <!-- small box -->
                 <div class="small-box bg-warning">
                     <div class="inner">
-                        <h3>{{ attendance_stats.total_classes }}</h3>
+                        <h3>{{ total_days }}</h3>
 
                         <p>Total days</p>
                     </div>
@@ -63,7 +63,7 @@ Student Home
                 <!-- small box -->
                 <div class="small-box bg-danger">
                     <div class="inner">
-                        <h3> {{ subjects_enrolled }}</h3>
+                        <h3> {{ subject_count }}</h3>
 
                         <p>Total Subjects</p>
                     </div>
@@ -93,8 +93,8 @@ Student Home
                         </div>
                     </div>
                     <div class="card-body">
-                        <canvas id="pieChart"
-                            style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                        <div id="attendancePieChart"
+                            style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
                     </div>
                     <!-- /.card-body -->
                 </div>
@@ -102,7 +102,7 @@ Student Home
             </div>
 
             <div class="col-lg-6">
-                <!-- BAR CHART -->
+                <!-- PIE CHART -->
                 <div class="card card-success">
                     <div class="card-header">
                         <h3 class="card-title">Attendance Statistics by Subjects</h3>
@@ -116,18 +116,89 @@ Student Home
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="chart">
-                            <canvas id="barChart"
-                                style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                        </div>
+                        <div id="attendanceBySubjectPieChart"
+                            style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
                     </div>
                     <!-- /.card-body -->
                 </div>
                 <!-- /.card -->
-            </div>
+            </div> 
+            
+            
+        </div> 
+        <div class="row">
+            <div class="col-lg-6">
+                <!-- PIE CHART -->
+                <div class="card card-info">
+                    <div class="card-header">
+                        <h3 class="card-title">Mark on Each subjects</h3>
+
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
+                                    class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="remove"><i
+                                    class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="attendancePieChart"
+                            style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>          
         </div>
 
     </div><!-- /.container-fluid -->
 </section>
 
 {% endblock main_content %}
+{% block custom_js %}
+<script src="{% static 'apexcharts/dist/apexcharts.min.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Pie Chart for Total Attendance and Absenteeism
+      var total_present_days = {{ total_present_days }};
+      var total_absent_days = {{ total_absent_days }};
+  
+      var options1 = {
+        series: [total_present_days, total_absent_days],
+        chart: {
+          height: 350,
+          type: 'pie'
+        },
+        labels: ['Present', 'Absent'],
+        title: {
+          
+          align: 'left'
+        }
+      };
+  
+      var chart1 = new ApexCharts(document.querySelector("#attendancePieChart"), options1);
+      chart1.render();
+  
+      // Pie Chart for Attendance by Subjects
+      var attendance_by_subject_data = {{ attendance_by_subject_data|safe }};
+      var subjects_labels = {{ subjects_labels|safe }};
+  
+      var options2 = {
+        series: attendance_by_subject_data,
+        chart: {
+          height: 350,
+          type: 'pie'
+        },
+        labels: subjects_labels,
+        title: {
+          
+          align: 'left'
+        }
+      };
+  
+      var chart2 = new ApexCharts(document.querySelector("#attendanceBySubjectPieChart"), options2);
+      chart2.render();
+    });
+  </script>
+  
+{% endblock custom_js %}

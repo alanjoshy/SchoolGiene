@@ -74,11 +74,11 @@
                                     <div class="col-lg-2">
                                         <div class="form-check">
                                             <input type="checkbox" name="student_data[]" value="{{ student.id }}" />
-                                            <label class="form-check-label">{{ student.name }} ({{ student.username }})</label>
+                                            <label class="form-check-label">{{ student.first_name }} {{ student.last_name }}</label>
                                         </div>
                                     </div>
                                     {% endfor %}
-                                </div>
+                                </div> 
                             </div>
                         </div>
                         {% endif %}

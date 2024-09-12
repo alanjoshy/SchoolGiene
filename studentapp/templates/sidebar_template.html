@@ -16,7 +16,7 @@
             <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle elevation-2" alt="User Image">
           </div>
           <div class="info">
-            <a href="#" class="d-block">{{ user.first_name }} {{ user.last_name }}</a>
+            <a href="{% url 'student_profile_update'  %}" class="d-block">{{ user.username }} </a>
           </div>
         </div>
 
@@ -27,8 +27,8 @@
                 with font-awesome or any other icon font library -->
             
             <li class="nav-item">
-              {% url 'student_home' as student_home %}
-              <a href="{{ student_home }}" class="nav-link {% if request.path == student_home %} active {% endif %}">
+              {% url 'student_dashboard' as student_dashboard %}
+              <a href="{{ student_dashboard }}" class="nav-link ">
                 <i class="nav-icon fas fa-tachometer-alt"></i>
                 <p>
                   Home
@@ -38,8 +38,8 @@
             </li>
 
             <li class="nav-item">
-              {% url 'student_view_attendance' as student_view_attendance %}
-              <a href="{{ student_view_attendance }}" class="nav-link {% if request.path == student_view_attendance %} active {% endif %}">
+              {% url 'attendance_view' as attendance_view %}
+              <a href="{{ attendance_view }}" class="nav-link ">
                 <i class="nav-icon fas fa-calendar-alt"></i>
                 <p>
                   View Attendance
@@ -49,8 +49,8 @@
             </li>
 
             <li class="nav-item">
-              {% url 'student_view_result' as student_view_result %}
-              <a href="{{ student_view_result }}" class="nav-link {% if request.path == student_view_result %} active {% endif %}">
+              {% url 'result_view' as result_view %}
+              <a href="{{ result_view }}" class="nav-link ">
                 <i class="nav-icon fas fa-tasks"></i>
                 <p>
                   View Result

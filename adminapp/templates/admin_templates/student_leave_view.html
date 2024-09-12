@@ -1,0 +1,68 @@
+{% extends 'admin_templates/base_template.html' %}
+
+{% block page_title %}
+    Leave Apply by Students
+{% endblock page_title %}
+
+{% block main_content %}
+
+{% load static %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Leave Apply by Students</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Student ID</th>
+                                    <th>Student Name</th>
+                                    <th>Leave Date</th>
+                                    <th>Leave Message</th>
+                                    <th>Applied On</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in leaves %}
+                                <tr>
+                                    <td>{{ leave.id }}</td>
+                                    <td>{{ leave.user.id }}</td>
+                                    <td>{{ leave.user.username }} {{ leave.user.last_name }}</td> 
+                                    <td>{{ leave.start_date }} to {{ leave.end_date }}</td>
+                                    <td>{{ leave.reason }}</td>
+                                    <td>{{ leave.applied_at }}</td>
+                                    <td>
+                                        {% if leave.status == 'pending' %}
+                                            <a href="{% url 'student_update_leave_status' leave_id=leave.id %}?status=approved" class="btn btn-success">Approve</a>
+                                            <a href="{% url 'student_update_leave_status' leave_id=leave.id %}?status=rejected" class="btn btn-danger">Reject</a>
+                                        {% elif leave.status == 'approved' %}
+                                            <button class="btn btn-success" disabled="disabled">Approved</button>
+                                        {% elif leave.status == 'rejected' %}
+                                            <button class="btn btn-danger" disabled="disabled">Rejected</button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+      
+
+  {% endblock main_content %}
+
+  {% comment %} Custom JS to Identify the Reply and Post Reply {% endcomment %}
+
+  {% block custom_js %}
+
+  {% endblock custom_js %}

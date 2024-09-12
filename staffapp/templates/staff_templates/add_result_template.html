@@ -1,0 +1,113 @@
+{% extends 'staff_templates/base_template.html' %}
+
+{% block page_title %}
+    Add Result
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Form to Select Subject -->
+                <form method="POST" action="{% url 'add_result' %}">
+                    {% csrf_token %}
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">Select Subject</h3>
+                        </div>
+
+                        <!-- Display Messages -->
+                        {% if messages %}
+                            <div class="form-group">
+                                <div class="col-12">
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                                            {{ message }}
+                                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <select class="form-control" name="subject" id="subject">
+                                    <option value="">Select Subject</option>
+                                    {% for subject in subjects %}
+                                        <option value="{{ subject.id }}" {% if subject.id == selected_subject_id %}selected{% endif %}>{{ subject.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" name="fetch_students" class="btn btn-primary">Fetch Students</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                {% if students %}
+                <!-- Form to Add Results -->
+                <form method="POST" action="{% url 'add_result' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="subject" value="{{ selected_subject_id }}" />
+                    
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">Add Result</h3>
+                        </div>
+
+                        <div class="card-body">
+                            
+
+                            <div class="form-group">
+                                <label>Exam</label>
+                                <select class="form-control" name="exam" id="exam">
+                                    <option value="">Select Exam</option>
+                                    {% for exam in exams %}
+                                        <option value="{{ exam.id }}" >{{ exam.name }} - {{ exam.exam_date }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Student List</label>
+                                <select class="form-control" name="student_id">
+                                    <option value="">Select Student</option>
+                                    {% for student in students %}
+                                        <option value="{{ student.id }}">{{ student.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <label>Assignment Marks</label>
+                                        <input type="text" name="assignment_marks" class="form-control" placeholder="Assignment Marks" />
+                                    </div>
+
+                                    <div class="col-lg-6">
+                                        <label>Exam Marks</label>
+                                        <input type="text" name="exam_marks" class="form-control" placeholder="Exam Marks" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" name="save_result" class="btn btn-success">Save Result</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+{% endblock main_content %}

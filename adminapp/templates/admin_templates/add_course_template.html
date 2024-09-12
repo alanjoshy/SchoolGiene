@@ -1,7 +1,7 @@
 {% extends 'admin_templates/base_template.html' %}
 
 {% block page_title %}
-    Add Course
+Add Course
 {% endblock page_title %}
 
 {% block main_content %}
@@ -9,12 +9,12 @@
 {% load static %}
 
 <section class="content">
-        <div class="container-fluid">
+    <div class="container-fluid">
 
-            <div class="row">
-                <div class="col-md-12">
-                    <!-- general form elements -->
-                    <div class="card card-primary">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
                     <div class="card-header">
                         <h3 class="card-title">Add Course</h3>
                     </div>
@@ -22,32 +22,34 @@
                     <!-- form start -->
                     <form role="form" method="POST" action="{% url 'add_course' %}">
                         {% csrf_token %}
-                    
+
                         {% comment %} Display Messages {% endcomment %}
                         {% if messages %}
-                            <div class="form-group">
-                                <div class="col-12">
-                                    {% for message in messages %}
-                                        {% if message.tags == "error" %}
-                                            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="margin-top: 10px;">
-                                                {{ message }}
-                                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                        {% elif message.tags == "success" %}
-                                            <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-top: 10px;">
-                                                {{ message }}
-                                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
+                        <div class="form-group">
+                            <div class="col-12">
+                                {% for message in messages %}
+                                {% if message.tags == "error" %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert"
+                                    style="margin-top: 10px;">
+                                    {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
                                 </div>
+                                {% elif message.tags == "success" %}
+                                <div class="alert alert-success alert-dismissible fade show" role="alert"
+                                    style="margin-top: 10px;">
+                                    {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
                             </div>
+                        </div>
                         {% endif %}
-                    
+
                         <div class="card-body">
                             <div class="form-group">
                                 <label>Course Name</label>
@@ -55,19 +57,30 @@
                             </div>
                         </div>
                         <!-- /.card-body -->
-                    
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="class_teacher">Assign Class Teacher</label>
+                                <select class="form-control" id="class_teacher" name="class_teacher" required>
+                                    <option value="">Select a teacher</option>
+                                    {% for teacher in teachers %}
+                                    <option value="{{ teacher.id }}">{{ teacher.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="card-footer">
                             <button type="submit" class="btn btn-primary">Add Course</button>
                         </div>
                     </form>
-                    
-                    </div>
-                    <!-- /.card -->
 
                 </div>
+                <!-- /.card -->
+
             </div>
+        </div>
 
-        </div><!-- /.container-fluid -->
-      </section>
+    </div><!-- /.container-fluid -->
+</section>
 
-  {% endblock main_content %}
+{% endblock main_content %}

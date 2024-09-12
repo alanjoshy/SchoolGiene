@@ -47,7 +47,7 @@
             
             <li class="nav-item">
               
-              <a href="#" class="nav-link">
+              <a href="{% url 'staff_register' %}" class="nav-link"> 
                 <i class="nav-icon fas fa-th"></i>
                 <p>
                   Add Staff
@@ -115,21 +115,57 @@
               </a>
             </li>
 
+            <li class="nav-item">
+              
+              <a href="{% url 'add_session' %}" class="nav-link">
+                <i class="nav-icon fas fa-book"></i>
+                <p>
+                  Add session
+                </p>
+              </a>
+            </li>
+            <li class="nav-item">
+              
+              <a href="{% url 'manage_session' %}" class="nav-link">
+                <i class="nav-icon fas fa-book"></i>
+                <p>
+                  Manage Session
+                </p>
+              </a>
+            </li>
 
           
             <li class="nav-item">
               
-              <a href="#" class="nav-link">
+              <a href="{% url 'view_attendance' %}" class="nav-link"> 
                 <i class="nav-icon fas fa-calendar-alt"></i>
                 <p>
                   View Attendance
                 </p>
               </a>
             </li>
+            <li class="nav-item">
+              
+              <a href="{% url 'add_exam' %}" class="nav-link">
+                <i class="nav-icon fas fa-calendar-alt"></i>
+                <p>
+                  Add Exam
+                </p>
+              </a>
+            </li>
+            <li class="nav-item">
+              
+              <a href="{% url 'manage_exam' %}" class="nav-link">
+                <i class="nav-icon fas fa-calendar-alt"></i>
+                <p>
+                  Manage Exam 
+                </p>
+              </a>
+            </li>
 
             <li class="nav-item">
               
-              <a href="#" class="nav-link">
+              <a href="{% url 'admin_student_feedback' %}" class="nav-link"> 
                 <i class="nav-icon fas fa-th"></i>
                 <p>
                   Student Feedback
@@ -139,7 +175,7 @@
 
             <li class="nav-item">
               
-              <a href="#" class="nav-link">
+              <a href="{% url 'admin_staff_feedback' %}" class="nav-link">
                 <i class="nav-icon fas fa-th"></i>
                 <p>
                   Stafff Feedback
@@ -149,17 +185,17 @@
 
             <li class="nav-item">
               
-              <a href="#" class="nav-link">
+              <a href="{% url 'student_view_leave' %}" class="nav-link">  
                 <i class="nav-icon fas fa-th"></i>
                 <p>
-                  Student Leave
+                  Student Leave   
                 </p>
               </a>
             </li>
 
             <li class="nav-item">
               
-              <a href="#" class="nav-link">
+              <a href="{% url 'staff_view_leave' %}" class="nav-link">
                 <i class="nav-icon fas fa-th"></i>
                 <p>
                   Staff Leave

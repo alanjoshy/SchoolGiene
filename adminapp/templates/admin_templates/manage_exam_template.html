@@ -1,0 +1,178 @@
+{% extends 'admin_templates/base_template.html' %}
+
+{% block page_title %}
+    Manage Exams
+{% endblock page_title %}
+
+{% block main_content %}
+
+{% load static %}
+
+<section class="content">
+    <div class="container-fluid">
+        <a class="btn btn-primary" href="{% url 'add_exam' %}" role="button">+ Add exam</a> <br/>&nbsp;
+
+        {% if messages %}
+            <div class="form-group">
+                <div class="col-12">
+                    {% for message in messages %}
+                        {% if message.tags == "error" %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% elif message.tags == "success" %}
+                            <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Exam Details</h3>
+                        <div class="card-tools">
+                            <div class="input-group input-group-sm" style="width: 150px;">
+                                <input type="text" name="table_search" class="form-control float-right" placeholder="Search">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Exam Name</th>
+                                    <th>Subject</th>
+                                    <th>Course</th>
+                                    <th>Session</th>
+                                    <th>Exam Date</th>
+                                    <th>Created At</th>
+                                    <th>Updated At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exam in exams %}
+                                <tr>
+                                    <td>{{ exam.id }}</td>
+                                    <td>{{ exam.name }}</td>
+                                    <td>{{ exam.subject.name }}</td>
+                                    <td>{{ exam.course.name }}</td>
+                                    <td>{{ exam.session.name }}</td>
+                                    <td>{{ exam.exam_date }}</td>
+                                    <td>{{ exam.created_at }}</td>
+                                    <td>{{ exam.updated_at }}</td>
+                                    <td>
+                                        <button class="btn btn-success" data-toggle="modal" data-target="#editExamModal" 
+                                            data-id="{{ exam.id }}"
+                                            data-name="{{ exam.name }}"
+                                            data-subject="{{ exam.subject.id }}"
+                                            data-course="{{ exam.course.id }}"
+                                            data-session="{{ exam.session.id }}"
+                                            data-date="{{ exam.exam_date }}">Edit</button> 
+                                        <a href="?delete={{ exam.id }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this exam?');">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Exam Modal -->
+        <div class="modal fade" id="editExamModal" tabindex="-1" role="dialog" aria-labelledby="editExamModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="POST" action="#">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editExamModalLabel">Edit Exam</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="exam_id" id="edit-exam-id">
+
+                            <div class="form-group">
+                                <label for="edit-exam-name">Exam Name</label>
+                                <input type="text" class="form-control" name="name" id="edit-exam-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-subject">Subject</label>
+                                <select class="form-control" name="subject" id="edit-subject" required>
+                                    {% for subject in subjects %}
+                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-course">Course</label>
+                                <select class="form-control" name="course" id="edit-course" required>
+                                    {% for course in courses %}
+                                    <option value="{{ course.id }}">{{ course.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-session">Session</label>
+                                <select class="form-control" name="session" id="edit-session" required>
+                                    {% for session in sessions %}
+                                    <option value="{{ session.id }}">{{ session.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-exam-date">Exam Date</label>
+                                <input type="date" class="form-control" name="exam_date" id="edit-exam-date" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script>
+    $('#editExamModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var examId = button.data('id');
+        var examName = button.data('name');
+        var examSubject = button.data('subject');
+        var examCourse = button.data('course');
+        var examSession = button.data('session');
+        var examDate = button.data('date');
+
+        var modal = $(this);
+        modal.find('#edit-exam-id').val(examId);
+        modal.find('#edit-exam-name').val(examName);
+        modal.find('#edit-subject').val(examSubject);
+        modal.find('#edit-course').val(examCourse);
+        modal.find('#edit-session').val(examSession);
+        modal.find('#edit-exam-date').val(examDate);
+    });
+</script>
+
+{% endblock main_content %}
