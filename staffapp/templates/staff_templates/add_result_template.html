@@ -45,7 +45,7 @@
                             </div>
 
                             <div class="form-group">
-                                <button type="submit" name="fetch_students" class="btn btn-primary">Fetch Students</button>
+                                <button type="submit" name="fetch_students" class="btn btn-primary">Fetch Details</button>
                             </div>
                         </div>
                     </div>
@@ -110,4 +110,18 @@
         </div>
     </div><!-- /.container-fluid -->
 </section>
-{% endblock main_content %}
+{% endblock main_content %} 
+{% block extra_js %}
+<script>
+    document.querySelector('form').addEventListener('submit', function(event) {
+        var assignmentMarks = parseFloat(document.querySelector('input[name="assignment_marks"]').value);
+        var examMarks = parseFloat(document.querySelector('input[name="exam_marks"]').value);
+    
+        if ((assignmentMarks < 0) || (examMarks < 0)) {
+            alert('Negative marks cannot be added for exam and assignment.');
+            event.preventDefault(); // Prevent the form from submitting
+        }
+    });
+    </script>
+{% endblock extra_js %}
+    

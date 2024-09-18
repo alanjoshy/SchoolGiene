@@ -47,7 +47,7 @@
                     <!-- small box -->
                     <div class="small-box bg-warning">
                     <div class="inner">
-                        <h3>0</h3>
+                        <h3> {{ total_leaves_taken }}</h3>
 
                         <p>Total Leave Taken</p>
                     </div>
@@ -78,21 +78,21 @@
 
             <div class="row">
                 <div class="col-lg-6">
-                    <!-- PIE CHART -->
+                    <!-- LINE CHART -->
                     <div class="card card-danger">
-                    <div class="card-header">
-                        <h3 class="card-title">Leave Status Chart</h3>
-
-                        <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
-                        </button>
-                        <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                        <div class="card-header">
+                            <h3 class="card-title">Leave Status Chart</h3>
+    
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+                                </button>
+                                <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="pieChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                    </div>
-                    <!-- /.card-body -->
+                        <div class="card-body">
+                            <div id="lineChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
+                        </div>
+                        <!-- /.card-body -->
                     </div>
                     <!-- /.card -->
                 </div>
@@ -153,129 +153,94 @@
   <script src="{% static 'apexcharts/dist/apexcharts.min.js' %}"></script>
   <script>
       document.addEventListener('DOMContentLoaded', function () {
-          // Sample data for the charts
-          var staff_count = {{ staff_count }};
-          var student_count = {{ student_count }};
-  
-          // Pie Chart for Staff vs Students
-          var options1 = {
-              series: [staff_count, student_count],
+          // Data for the line chart: Leave counts and month names from the Django context
+          var leaveCounts = {{ leave_count_by_month|safe }};
+          var months = {{ months|safe }};
+          
+          // Line Chart for Leave Status Over Time
+          var optionsLineChart = {
+              series: [{
+                  name: 'Leaves',
+                  data: leaveCounts  // The leave counts for each month
+              }],
               chart: {
                   height: 350,
-                  type: 'pie'
+                  type: 'line',
+                  zoom: {
+                      enabled: false
+                  }
               },
-              labels: ['Staff', 'Students'],
+              dataLabels: {
+                  enabled: false
+              },
+              stroke: {
+                  curve: 'smooth'
+              },           
+              grid: {
+                  row: {
+                      colors: ['#f3f3f3', 'transparent'], // Alternate row color
+                      opacity: 0.5
+                  }
+              },
+              xaxis: {
+                  categories: months,  // Month names
+                  title: {
+                      text: 'Months'
+                  }
+              },
+              yaxis: {
+                  title: {
+                      text: 'Number of Leaves'
+                  }
+              }
+          };
+          var lineChart = new ApexCharts(document.querySelector("#lineChart"), optionsLineChart);
+          lineChart.render();
+  
+  
+          // Data for the bar chart: Student counts and subject names from the Django context
+          var studentCounts = {{ student_counts|safe }};
+          var subjectNames = {{ subject_names|safe }};
+  
+          // Bar Chart for Student Count by Subject
+          var optionsBarChart = {
+              series: [{
+                  name: 'Students Count',
+                  data: studentCounts
+              }],
+              chart: {
+                  height: 350,
+                  type: 'bar'
+              },
+              plotOptions: {
+                  bar: {
+                      columnWidth: '50%'
+                  }
+              },
+              dataLabels: {
+                  enabled: false
+              },
+              xaxis: {
+                  categories: subjectNames,
+                  title: {
+                      text: 'Subjects'
+                  }
+              },
+              yaxis: {
+                  title: {
+                      text: 'Number of Students'
+                  }
+              },
               title: {
-                  text: 'Staff vs Students',
+                  text: 'Student Count by Subject',
                   align: 'left'
               }
           };
   
-          var chart1 = new ApexCharts(document.querySelector("#pieChart"), options1);
-          chart1.render();
-  
-          // Sample data for total subjects in each course
-          var courseSubjectCounts = [
-              { course_name: 'Course 1', subject_count: 5 },
-              { course_name: 'Course 2', subject_count: 7 },
-              { course_name: 'Course 3', subject_count: 3 },
-              { course_name: 'Course 4', subject_count: 6 },
-              { course_name: 'Course 5', subject_count: 8 }
-          ];
-  
-          var series2 = courseSubjectCounts.map(function (item) {
-              return item.subject_count;
-          });
-  
-          var labels2 = courseSubjectCounts.map(function (item) {
-              return item.course_name;
-          });
-  
-          // Pie Chart for Total Subjects in Each Course
-          var options2 = {
-              series: series2,
-              chart: {
-                  height: 350,
-                  type: 'pie'
-              },
-              labels: labels2,
-              title: {
-                  text: 'Total Subjects per Course',
-                  align: 'left'
-              }
-          };
-  
-          var chart2 = new ApexCharts(document.querySelector("#pieChart2"), options2);
-          chart2.render();
-  
-          // Sample data for students in each course
-          var courseStudentCounts = [
-              { course_name: 'Course 1', student_count: 15 },
-              { course_name: 'Course 2', student_count: 25 },
-              { course_name: 'Course 3', student_count: 35 },
-              { course_name: 'Course 4', student_count: 45 },
-              { course_name: 'Course 5', student_count: 55 }
-          ];
-  
-          var series3 = courseStudentCounts.map(function (item) {
-              return item.student_count;
-          });
-  
-          var labels3 = courseStudentCounts.map(function (item) {
-              return item.course_name;
-          });
-  
-          // Pie Chart for Total Students in Each Course
-          var options3 = {
-              series: series3,
-              chart: {
-                  height: 350,
-                  type: 'pie'
-              },
-              labels: labels3,
-              title: {
-                  text: 'Total Students per Course',
-                  align: 'left'
-              }
-          };
-  
-          var chart3 = new ApexCharts(document.querySelector("#pieChart3"), options3);
-          chart3.render();
-  
-          // Sample data for students in each subject
-          var subjectStudentCounts = [
-              { subject_name: 'Subject 1', student_count: 10 },
-              { subject_name: 'Subject 2', student_count: 20 },
-              { subject_name: 'Subject 3', student_count: 30 },
-              { subject_name: 'Subject 4', student_count: 40 },
-              { subject_name: 'Subject 5', student_count: 50 }
-          ];
-  
-          var series4 = subjectStudentCounts.map(function (item) {
-              return item.student_count;
-          });
-  
-          var labels4 = subjectStudentCounts.map(function (item) {
-              return item.subject_name;
-          });
-  
-          // Pie Chart for Total Students in Each Subject
-          var options4 = {
-              series: series4,
-              chart: {
-                  height: 350,
-                  type: 'pie'
-              },
-              labels: labels4,
-              title: {
-                  text: 'Total Students per Subject',
-                  align: 'left'
-              }
-          };
-  
-          var chart4 = new ApexCharts(document.querySelector("#pieChart4"), options4);
-          chart4.render();
+          var barChart = new ApexCharts(document.querySelector("#barChart"), optionsBarChart);
+          barChart.render();
       });
   </script>
   {% endblock custom_js %}
+  
   

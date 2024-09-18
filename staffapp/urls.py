@@ -10,8 +10,7 @@ urlpatterns = [
     path('view_attendance', views.view_attendance, name='view_attendance'),
     path('view_results', views.view_results, name='view_results'),
     path('add_result', views.add_result, name='add_result'),
-     path('staff_apply_leave/', views.staff_apply_leave, name='staff_apply_leave'),
-    
-    
-    
+    path('staff_apply_leave/', views.staff_apply_leave, name='staff_apply_leave'), 
+    path('staff_feedback/', views.staff_feedback, name='staff_feedback'),
+     
 ]

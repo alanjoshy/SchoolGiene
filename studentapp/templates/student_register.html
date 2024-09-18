@@ -7,14 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Registration</title>
-    <!-- Font Icon -->
-    <link rel="stylesheet" href="{% static 'fonts/material-icon/css/material-design-iconic-font.min.css' %}">
-    <!-- Main css -->
+    <!-- Main CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 
 <body>
-    
+
     <!-- Sign up form -->
     <div class="main">
         <section class="signup">
@@ -23,62 +21,167 @@
                     <div class="signup-form">
                         <h2 class="form-title">Student Registration</h2>
 
+                        <!-- Display messages -->
+                        {% if messages %}
+                            <div class="messages">
+                                {% for message in messages %}
+                                    <p class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
                         <!-- form starts here -->
-                        <form action="{% url 'student_register' %}" method="POST" class="register" id="register" enctype="multipart/form-data">
+                        <form action="{% url 'register_student' %}" method="POST" class="register" id="register" enctype="multipart/form-data">
                             {% csrf_token %}
-                            
-                            <!-- Name -->
+
+                            <!-- First Name -->
                             <div class="form-group">
-                                <label for="name"><i class="zmdi zmdi-account material-icons-name"></i></label>
-                                <input type="text" name="name" id="name" placeholder="Your Name" required />
-                            </div>
-                            <!-- Username -->
-                            <div class="form-group">
-                                <label for="username"><i class="zmdi zmdi-account material-icons-name"></i></label>
-                                <input type="text" name="username" id="username" placeholder="Your Username" required />
-                            </div>
-                            <!-- Email -->
-                            <div class="form-group">
-                                <label for="email"><i class="zmdi zmdi-email"></i></label>
-                                <input type="email" name="email" id="email" placeholder="Your Email" required />
-                            </div>
-                            <!-- Phone -->
-                            <div class="form-group">
-                                <label for="phone"><i class="zmdi zmdi-phone"></i></label> 
-                                <input type="text" name="phone" id="phone" placeholder="Your Phone Number" required />
-                            </div>
-                            <!-- Address -->
-                            <div class="form-group">
-                                <label for="address"><i class="zmdi zmdi-home"></i></label>
-                                <input type="text" name="address" id="address" placeholder="Your Address" required />
-                            </div>
-                            <!-- Photo -->
-                            <div class="form-group">
-                                <label for="photo"><i class="zmdi zmdi-image"></i></label>
-                                <input type="file" name="photo" id="photo" required />
-                            </div>
-                            <!-- Password1 -->
-                            <div class="form-group">
-                                <label for="password1"><i class="zmdi zmdi-lock"></i></label>
-                                <input type="password" name="password1" id="password1" placeholder="Password" required />
-                            </div>
-                            <!-- Password2 -->
-                            <div class="form-group">
-                                <label for="password2"><i class="zmdi zmdi-lock-outline"></i></label>
-                                <input type="password" name="password2" id="password2" placeholder="Repeat Your Password" required />
+                                <input type="text" name="first_name" id="first_name" placeholder="Enter your first name" required />
                             </div>
 
+                            <!-- Last Name -->
+                            <div class="form-group">
+                                <input type="text" name="last_name" id="last_name" placeholder="Enter your last name" required />
+                            </div>
+
+                            <!-- Username -->
+                            <div class="form-group">
+                                <input type="text" name="username" id="username" placeholder="Enter your username" required />
+                            </div>
+
+                            <!-- Email -->
+                            <div class="form-group">
+                                <input type="email" name="email" id="email" placeholder="Enter your email" required />
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="form-group">
+                                <input type="text" name="phone" id="phone" placeholder="Enter your phone number" required />
+                            </div>
+
+                            <!-- Address -->
+                            <div class="form-group">
+                                <input type="text" name="address" id="address" placeholder="Enter your address" required />
+                            </div>
+
+                            <!-- Course Selection -->
+                            <div class="form-group">
+                                <select name="course_id" id="course_id" required>
+                                    <option value="" disabled selected>Select your course</option>
+                                    {% for course in courses %}
+                                    <option value="{{ course.id }}">{{ course.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Photo Upload -->
+                            <div class="form-group">
+                                <input type="file" name="profile_photo" id="profile_photo" required />
+                            </div>
+
+                            <!-- Password -->
+                            <div class="form-group">
+                                <input type="password" name="password1" id="password1" placeholder="Enter your password" required />
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="form-group">
+                                <input type="password" name="password2" id="password2" placeholder="Confirm your password" required />
+                            </div>
+
+                            <!-- Submit Button -->
                             <div class="form-group form-button">
                                 <input type="submit" name="signup" id="signup" class="form-submit" value="Submit to Admin" />
                             </div>
+                        </form> 
+                        <form action="{% url 'home' %}">
+                            {% csrf_token %}
+                            <div class="form-group form-button">
+                                <input type="submit" name="home" id="home" class="form-submit" value="Home" />
+                            </div>
                         </form>
-                        
-                        
                     </div>
                 </div>
             </div>
         </section>
     </div>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+
+        .main {
+            padding: 20px;
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            color: #333;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .messages p {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .messages .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .messages .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+
 </body>
 
 </html>

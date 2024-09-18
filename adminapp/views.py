@@ -1,20 +1,24 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from adminapp.models import SchoolUser, Course, Subject, Session, Exam, ExamResult,Leave
+from adminapp.models import SchoolUser, Course, Subject, Session, Exam, ExamResult,Leave,Feedback
+from staffapp.models import Attendance
 from django.contrib.auth.models import User, auth
 from django.views.decorators.cache import cache_control
 from django.core.cache import cache
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password 
 from django.utils import timezone
+from django.db.models import Q
+from django.views.decorators.http import require_http_methods
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import imghdr
 
 
 # cache
 def clear_all_cache():
     cache.clear()
-
 
 # clear cookies from django
 def clear_all_cookies(response):
@@ -22,17 +26,14 @@ def clear_all_cookies(response):
         response.delete_cookie(cookie)
     return response
 
-
 # home page
 def home(request):
     return render(request, "admin_templates/home.html")
 
-
 # adminlogin
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def admin_login(request):
-
-    if request.method == "GET":
+    if request.method == "GET": 
         if request.user.is_authenticated:
             if request.user.is_superuser:
                 return redirect("admin_dashboard")
@@ -63,46 +64,55 @@ def admin_login(request):
         else:
             messages.error(request, "Invalid username or password.")
             return render(request, "admin_templates/admin_login.html")
-
     return render(request, "admin_templates/admin_login.html")
 
-
 # admin dashboard
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url="admin_login")
 def admin_dashboard(request):
     if not request.user.is_superuser:
         return redirect("admin_login")  # Redirect if the user is not a superuser
 
-    # students count
+    # Students count
     student_count = SchoolUser.objects.filter(role="student").count()
 
-    # staff count
+    # Staff count
     staff_count = SchoolUser.objects.filter(role="staff").count()
 
-    # course count
+    # Course count
     courses = Course.objects.all()
     course_count = courses.count()
 
-    # Get course names and the count of subjects in each course
-    course_subject_counts = []
+    # Get course names and count of students in each course
+    course_student_counts = []
     for course in courses:
-        subject_count = Subject.objects.filter(course=course).count()
-        course_subject_counts.append(
-            {"course_name": course.name, "subject_count": subject_count}
-        )
+        # Count the number of students enrolled in the course
+        student_in_course_count = SchoolUser.objects.filter(courses_enrolled=course, role="student").count()
 
-    # subject count
+        # Append data to the list
+        course_student_counts.append({
+            "course_name": course.name,
+            "student_count": student_in_course_count
+        })
+
+    # Subject count
     subject_count = Subject.objects.all().count()
+
+    # Prepare the course names and student counts for passing to the template
+    course_names = [course['course_name'] for course in course_student_counts]
+    student_counts = [course['student_count'] for course in course_student_counts]
 
     context = {
         "student_count": student_count,
         "staff_count": staff_count,
         "course_count": course_count,
         "subject_count": subject_count,
-        "course_subject_counts": course_subject_counts,  # Pass course and subject count data
+        "course_names": course_names,  # List of course names for the chart
+        "student_counts": student_counts  # List of student counts for the chart
     }
 
     return render(request, "admin_templates/home_content.html", context)
+
 
 
 # admin logout
@@ -117,26 +127,53 @@ def admin_logout(request):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def manage_student(request):
+    # Handle search query from the request
+    search_query = request.GET.get('search', '')
+
     if request.method == "POST":
+        # Handle student deletion
         student_id = request.POST.get("delete_student_id")
         if student_id:
             student = get_object_or_404(SchoolUser, id=student_id, role="student")
             student.delete()
             messages.success(request, "Student has been successfully deleted!")
-            return redirect(
-                "manage_student"
-            )  # Redirect to the same page to update the list
+            return redirect("manage_student")  # Refresh the page after deletion
 
-    # Fetch all students
+        # Handle student update (course change)
+        edit_student_id = request.POST.get("edit_student_id")
+        course_id = request.POST.get("course_id")
+        if edit_student_id and course_id:
+            student = get_object_or_404(SchoolUser, id=edit_student_id, role="student")
+            course = get_object_or_404(Course, id=course_id)
+            student.course = course  # Update the student's course
+            student.save()
+            messages.success(request, f"{student.first_name} {student.last_name}'s course has been updated successfully!")
+            return redirect("manage_student") 
+        
+    # Fetch all students with search functionality
     students = SchoolUser.objects.filter(role="student")
+    if search_query:
+        students = students.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
+    # Fetch all available courses for the dropdown
+    courses = Course.objects.all()
+
+    # Count total students and filtered students
     student_count = students.count()
 
     context = {
         "students": students,
+        "courses": courses,  # Pass available courses to the template
         "student_count": student_count,
+        "search_query": search_query,  # To retain search query in the input field
     }
-    return render(request, "admin_templates/manage_student_template.html", context)
 
+    return render(request, "admin_templates/manage_student_template.html", context)
 
 # student approval
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -147,7 +184,6 @@ def approve_student(request, student_id):
     student.save()
     messages.success(request, "Student has been approved.")
     return redirect("manage_student")
-
 
 # staff register
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -164,17 +200,27 @@ def staff_register(request):
         password1 = request.POST.get("password1")
         password2 = request.POST.get("password2")
 
+        # Check for password match
         if password1 != password2:
             messages.error(request, "Passwords do not match.")
             return redirect("staff_register")
 
+        # Check if username already exists
         if SchoolUser.objects.filter(username=username).exists():
             messages.error(request, "Username already taken.")
             return redirect("staff_register")
 
+        # Check if email already exists
         if SchoolUser.objects.filter(email=email).exists():
             messages.error(request, "Email already in use.")
             return redirect("staff_register")
+
+        # Validate the uploaded file is an image
+        if photo:
+            file_type = imghdr.what(photo)
+            if file_type not in ['jpeg', 'png', 'gif', 'bmp']:
+                messages.error(request, "Uploaded file is not a valid image.")
+                return redirect("staff_register")
 
         # Create the staff user
         user = SchoolUser.objects.create_user(
@@ -193,14 +239,15 @@ def staff_register(request):
         user.save()
 
         messages.success(request, "Staff registered successfully.")
-        return redirect("admin_dashboard")
+        return redirect("staff_register")
 
     return render(request, "admin_templates/staff_register_template.html")
-
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def manage_staff(request):
+    search_query = request.GET.get('search', '')
+
     if request.method == "POST":
         # Handle staff deletion
         if "delete_staff_id" in request.POST:
@@ -208,8 +255,6 @@ def manage_staff(request):
             if staff_id:
                 try:
                     staff_member = SchoolUser.objects.get(id=staff_id, role="staff")
-
-                    # Check if the staff member is assigned to any subjects
                     assigned_subjects = Subject.objects.filter(staff_assigned=staff_member)
                     if assigned_subjects.exists():
                         messages.error(
@@ -219,11 +264,8 @@ def manage_staff(request):
                     else:
                         staff_member.delete()
                         messages.success(request, "Staff member deleted successfully.")
-
                 except SchoolUser.DoesNotExist:
                     messages.error(request, "Staff member not found.")
-
-            # Refresh the page after deletion
             return redirect("manage_staff")
 
         # Handle staff update
@@ -231,7 +273,6 @@ def manage_staff(request):
             staff_id = request.POST.get("staff_id")
             staff = get_object_or_404(SchoolUser, id=staff_id, role="staff")
 
-            # Update staff details, preserving the staff ID
             staff.first_name = request.POST.get("first_name", staff.first_name)
             staff.last_name = request.POST.get("last_name", staff.last_name)
             staff.username = request.POST.get("username", staff.username)
@@ -253,22 +294,31 @@ def manage_staff(request):
             messages.success(request, "Staff member updated successfully.")
             return redirect("manage_staff")
 
-    # Fetch all staff members
     staff = SchoolUser.objects.filter(role="staff")
-    # Count staff members
+    if search_query:
+        staff = staff.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
     staff_count = staff.count()
 
     context = {
         "staff_members": staff,
         "staff_count": staff_count,
+        "search_query": search_query,
     }
     return render(request, "admin_templates/manage_staff_template.html", context)
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def add_subject(request):
     return render(request, "admin_templates/add_subject_template.html")
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def add_student(request):
     return render(request, "admin_templates/add_student_template.html")
 
@@ -318,38 +368,58 @@ def add_course(request):
         request, "admin_templates/add_course_template.html", {"teachers": teachers}
     )
 
-
 # manage course
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
+@require_http_methods(["GET", "POST"])
 def manage_course(request):
     if request.method == "POST":
-        delete_course_id = request.POST.get("delete_course_id")
-        if delete_course_id:
-            course = get_object_or_404(Course, id=delete_course_id)
-            enrolled_students = SchoolUser.objects.filter(
-                courses_enrolled=course, role="student"
-            )
-
-            if enrolled_students.exists():
-                messages.error(
-                    request,
-                    "Students are enrolled in this course. Please move the students to another course or delete the students before deleting the course.",
+        if "delete_course_id" in request.POST:
+            # Handle course deletion
+            delete_course_id = request.POST.get("delete_course_id")
+            if delete_course_id:
+                course = get_object_or_404(Course, id=delete_course_id)
+                enrolled_students = SchoolUser.objects.filter(
+                    courses_enrolled=course, role="student"
                 )
-                # You can redirect to a specific page where the user can manage student reassignment
+
+                if enrolled_students.exists():
+                    messages.error(
+                        request,
+                        "Students are enrolled in this course. Please move the students to another course or delete the students before deleting the course.",
+                    )
+                    return redirect("manage_course")
+                else:
+                    course.delete()
+                    messages.success(request, "Course has been successfully deleted!")
+                    return redirect("manage_course")
+
+        elif "edit_course_id" in request.POST:
+            # Handle course editing
+            edit_course_id = request.POST.get("edit_course_id")
+            if edit_course_id:
+                course = get_object_or_404(Course, id=edit_course_id)
+                course.name = request.POST.get("name")
+                class_teacher_id = request.POST.get("class_teacher")
+                course.class_teacher = get_object_or_404(SchoolUser, id=class_teacher_id)
+                course.save()
+                messages.success(request, "Course details have been successfully updated!")
                 return redirect("manage_course")
-            else:
-                course.delete()
-                messages.success(request, "Course has been successfully deleted!")
-                return redirect(
-                    "manage_course"
-                )  # Redirect to the same page to refresh the list
 
-    courses = Course.objects.all()
-    assigned_staff = Course.objects.all().select_related("class_teacher")
-    context = {"courses": courses, "assigned_staff": assigned_staff}
+    # Handle search functionality
+    query = request.GET.get("search", "")
+    if query:
+        courses = Course.objects.filter(name__icontains=query)  # Search courses by name
+    else:
+        courses = Course.objects.all()
+
+    staff_members = SchoolUser.objects.filter(role="staff")  # Fetch all staff members
+    context = {
+        "courses": courses,
+        "staff_members": staff_members,
+        "query": query,  # Pass the search query to the template
+    }
     return render(request, "admin_templates/manage_course_template.html", context)
-
 
 # add subject
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -397,24 +467,62 @@ def add_subject(request):
     }
     return render(request, "admin_templates/add_subject_template.html", context)
 
-
 # manage subjects
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def manage_subject(request):
-    if request.method == "POST":
-        delete_subject_id = request.POST.get("delete_subject_id")
-        if delete_subject_id:
-            try:
-                subject = get_object_or_404(Subject, id=delete_subject_id)
-                subject.delete()
-                messages.success(request, "Subject has been successfully deleted!")
-            except Subject.DoesNotExist:
-                messages.error(request, "Subject does not exist.")
-            return redirect("manage_subject")  # Redirect to refresh the list
+    search_query = request.GET.get('search', '')
 
+    if request.method == "POST":
+        if 'delete_subject_id' in request.POST:
+            delete_subject_id = request.POST.get("delete_subject_id")
+            if delete_subject_id:
+                try:
+                    subject = get_object_or_404(Subject, id=delete_subject_id)
+                    
+                    # Check if there are any exams associated with the subject
+                    if Exam.objects.filter(subject=subject).exists():
+                        messages.error(request, "An exam has been added to this subject. Please delete the associated exams before deleting the subject.")
+                    else:
+                        subject.delete()
+                        messages.success(request, "Subject has been successfully deleted!")
+                except Subject.DoesNotExist:
+                    messages.error(request, "Subject does not exist.")
+                return redirect("manage_subject")  # Redirect to refresh the list
+
+        elif 'edit_subject_id' in request.POST:
+            edit_subject_id = request.POST.get("edit_subject_id")
+            subject_name = request.POST.get("subject_name")
+            course_id = request.POST.get("course_id")
+            staff_id = request.POST.get("staff_id")
+
+            if edit_subject_id:
+                subject = get_object_or_404(Subject, id=edit_subject_id)
+                subject.name = subject_name
+                subject.course_id = course_id
+                subject.staff_assigned_id = staff_id
+                subject.save()
+                messages.success(request, "Subject has been successfully updated!")
+                return redirect("manage_subject")
+
+    # Search functionality
     subjects = Subject.objects.select_related("course", "staff_assigned").all()
-    context = {"subjects": subjects}
+    if search_query:
+        subjects = subjects.filter(
+            Q(name__icontains=search_query) | 
+            Q(course__name__icontains=search_query) | 
+            Q(staff_assigned__first_name__icontains=search_query) |
+            Q(staff_assigned__last_name__icontains=search_query)
+        )
+
+    courses = Course.objects.all()
+    staffs = SchoolUser.objects.filter(role='staff')
+    context = {
+        "subjects": subjects,
+        "courses": courses,
+        "staffs": staffs,
+        "search_query": search_query,
+    }
     return render(request, "admin_templates/manage_subject_template.html", context)
 
 
@@ -503,7 +611,6 @@ def register_student(request):
 
     return render(request, "admin_templates/add_student_template.html", context)
 
-
 # add session
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
@@ -532,27 +639,53 @@ def add_session(request):
             messages.error(request, "Please fill out all fields.")
     return render(request, "admin_templates/add_session_template.html")
 
-
 # manage session
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def manage_session(request):
+    query = request.GET.get("q", "")
+    if query:
+        sessions = Session.objects.filter(name__icontains=query)
+    else:
+        sessions = Session.objects.all()
+
     if request.method == "POST":
+        # Handle session deletion
         delete_session_id = request.POST.get("delete_session_id")
         if delete_session_id:
             try:
                 session = get_object_or_404(Session, id=delete_session_id)
-                session.delete()
-                messages.success(request, "Session has been successfully deleted!")
+                
+                # Check if any exams are associated with this session
+                if session.exams.exists():
+                    messages.error(request, "This session has associated exams. Please delete the exams before deleting the session.")
+                else:
+                    session.delete()
+                    messages.success(request, "Session has been successfully deleted!")
             except Session.DoesNotExist:
                 messages.error(request, "Session does not exist.")
-            return redirect("manage_session")  # Redirect to refresh the list
+            return redirect("manage_session")
 
-    sessions = Session.objects.all()
+        # Handle session editing
+        session_id = request.POST.get("session_id")
+        if session_id:
+            try:
+                session = get_object_or_404(Session, id=session_id)
+                session.name = request.POST.get("session_name")
+                session.start_year = int(request.POST.get("start_year"))  # Ensure conversion to int
+                session.end_year = int(request.POST.get("end_year"))  # Ensure conversion to int
+                session.save()
+                messages.success(request, "Session has been successfully updated!")
+            except Exception as e:
+                messages.error(request, f"Error updating session: {e}")
+            return redirect("manage_session")
+
     return render(
-        request, "admin_templates/manage_session_template.html", {"sessions": sessions}
+        request, "admin_templates/manage_session_template.html", {
+            "sessions": sessions,
+            "search_query": query  # Pass the search query to the template
+        }
     )
-
 
 # add exam
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -589,27 +722,113 @@ def add_exam(request):
         {"sessions": sessions, "courses": courses, "subjects": subjects},
     )
 
-
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def manage_exam(request):
-    if "delete" in request.GET:
-        exam_id = request.GET.get("delete")
-        exam = get_object_or_404(Exam, id=exam_id)
-        exam.delete()
-        messages.success(request, "Exam deleted successfully.")
-        return redirect("manage_exam")
+    if request.method == "POST":
+        if "exam_id" in request.POST:
+            exam_id = request.POST.get("exam_id")
+            try:
+                exam = get_object_or_404(Exam, id=exam_id)
+                exam.name = request.POST.get("name")
+                exam.subject_id = request.POST.get("subject")
+                exam.course_id = request.POST.get("course")
+                exam.session_id = request.POST.get("session")
+                exam.exam_date = request.POST.get("exam_date")
+                exam.save()
+                messages.success(request, "Exam updated successfully.")
+            except Exception as e:
+                messages.error(request, f"Error updating exam: {e}")
+            return redirect("manage_exam")
 
-    exams = Exam.objects.all()
-    return render(
-        request, "admin_templates/manage_exam_template.html", {"exams": exams}
-    )
+        if "delete" in request.GET:
+            exam_id = request.GET.get("delete")
+            try:
+                exam = get_object_or_404(Exam, id=exam_id)
+                exam.delete()
+                messages.success(request, "Exam deleted successfully.")
+            except Exception as e:
+                messages.error(request, f"Error deleting exam: {e}")
+            return redirect("manage_exam")
+
+    search_query = request.GET.get("search", "")
+    exams = Exam.objects.filter(name__icontains=search_query)
+    subjects = Subject.objects.all()
+    courses = Course.objects.all()
+    sessions = Session.objects.all()
+
+    return render(request, "admin_templates/manage_exam_template.html", {
+        "exams": exams,
+        "subjects": subjects,
+        "courses": courses,
+        "sessions": sessions,
+        "search_query": search_query
+    })
 
 
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def view_attendance(request):
-    return render(request,"admin_templates/admin_view_attendance.html") 
+    # Fetch all courses and initialize variables
+    courses = Course.objects.all()
+    subjects = []
+    attendance_data = []
+    selected_course_id = None
+    selected_subject_id = None
+    start_date = None
+    end_date = None
+    error_message = None
 
+    if request.method == "POST":
+        # Get form data
+        selected_course_id = request.POST.get('course')
+        selected_subject_id = request.POST.get('subject')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
 
+        # Check if end_date is in the future
+        if end_date and timezone.now().date() < timezone.datetime.strptime(end_date, '%Y-%m-%d').date():
+            error_message = "Future dates cannot be selected."
+        else:
+            # Fetch subjects related to the selected course
+            if selected_course_id:
+                subjects = Subject.objects.filter(course_id=selected_course_id)
+
+            # If subject, start date, and end date are provided, fetch the attendance data
+            if selected_subject_id and start_date and end_date:
+                attendance_data = Attendance.objects.filter(
+                    subject_id=selected_subject_id,
+                    date__range=[start_date, end_date]
+                ).select_related('student', 'subject')
+
+                # If no attendance data is found, set an error message
+                if not attendance_data.exists():
+                    error_message = "No attendance data found for the selected date range."
+
+    context = {
+        'courses': courses,
+        'subjects': subjects,
+        'selected_course_id': selected_course_id,
+        'selected_subject_id': selected_subject_id,
+        'start_date': start_date,
+        'end_date': end_date,
+        'attendance_data': [
+            {
+                'student_name': attendance.student.name,
+                'subject_name': attendance.subject.name,
+                'date': attendance.date,
+                'status': "Present" if attendance.status else "Absent"
+            } for attendance in attendance_data
+        ],
+        'error_message': error_message,
+    }
+
+    # Render the template with the context
+    return render(request, "admin_templates/admin_view_attendance.html", context)
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def student_view_leave(request):
     # Fetch all leave requests where the user role is 'student'
     leave_requests = Leave.objects.filter(user__role='student')
@@ -620,16 +839,17 @@ def student_view_leave(request):
 
     return render(request, "admin_templates/student_leave_view.html", context)
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def staff_view_leave(request):
     leave_requests = Leave.objects.filter(user__role='staff')
-
     context = {
-        'leaves': leave_requests,
+        'leaves': leave_requests, 
     }
     return render(request,"admin_templates/staff_leave_view.html",context)
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def student_update_leave_status(request, leave_id):
     # Get the leave request by ID
     leave_request = get_object_or_404(Leave, id=leave_id)
@@ -654,7 +874,8 @@ def student_update_leave_status(request, leave_id):
     else:
         return redirect('staff_view_leave') 
     
-    
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required   
 def staff_update_leave_status(request, leave_id):
     # Get the leave request by ID
     leave_request = get_object_or_404(Leave, id=leave_id)
@@ -677,10 +898,46 @@ def staff_update_leave_status(request, leave_id):
     # Redirect to the leave request list view
     return redirect('staff_view_leave') 
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def admin_student_feedback(request):
-    return render(request,"admin_templates/student_feedback_template.html") 
+    if request.method == "POST":
+        feedback_id = request.POST.get('feedback_id')
+        reply = request.POST.get('reply')
+
+        if feedback_id and reply:
+            feedback = get_object_or_404(Feedback, id=feedback_id)
+            feedback.feedback_reply = reply
+            feedback.reply_at = timezone.now()
+            feedback.save()
+            messages.success(request, "Reply sent successfully.")
+            return redirect('admin_student_feedback')  # Redirect to avoid form resubmission
+
+    # Fetching feedback only from students
+    feedback_list = Feedback.objects.filter(sender_role='student')
+    context = {
+        'feedback_list': feedback_list,
+    }
+    return render(request, "admin_templates/student_feedback_template.html", context)
 
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def admin_staff_feedback(request):
-    return render(request,"admin_templates/staff_feedback_template.html") 
+    if request.method == "POST":
+        feedback_id = request.POST.get('feedback_id')
+        reply = request.POST.get('reply')
+
+        if feedback_id and reply:
+            feedback = get_object_or_404(Feedback, id=feedback_id)
+            feedback.feedback_reply = reply
+            feedback.reply_at = timezone.now()
+            feedback.save()
+            messages.success(request, "Reply sent successfully.")
+            return redirect('admin_staff_feedback')  # Redirect to avoid form resubmission
+
+    feedback_list = Feedback.objects.filter(sender_role='staff')
+    context = {
+        'feedback_list': feedback_list,
+    }
+    return render(request, "admin_templates/staff_feedback_template.html", context)

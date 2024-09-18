@@ -66,7 +66,7 @@ class Subject(models.Model):
     staff_assigned = models.ForeignKey(SchoolUser, on_delete=models.CASCADE, limit_choices_to={'role': 'staff'}, related_name='subjects_taught')
     students = models.ManyToManyField(SchoolUser, related_name='subjects_enrolled', limit_choices_to={'role': 'student'})
     created_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
-    updated_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    updated_at = models.DateTimeField(default=timezone.now, null=True, blank=True) 
 
     def __str__(self):
         return self.name 
@@ -149,7 +149,7 @@ class Leave(models.Model):
 
     @property
     def user_role(self):
-        return self.user.role  # Access the role of the user (staff or student)
+        return self.user.role 
     
     
     
@@ -163,6 +163,8 @@ class Feedback(models.Model):
     # Sender of the feedback
     sender_role = models.CharField(max_length=10, choices=SENDER_CHOICES)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'role__in': ['student', 'staff']})
+    
+
     
     # Feedback details
     feedback = models.TextField()

@@ -42,12 +42,15 @@
                     <div class="card-header">
                         <h3 class="card-title">Exam Details</h3>
                         <div class="card-tools">
-                            <div class="input-group input-group-sm" style="width: 150px;">
-                                <input type="text" name="table_search" class="form-control float-right" placeholder="Search">
-                                <div class="input-group-append">
-                                    <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
+                            <form method="GET" action="{% url 'manage_exam' %}">
+                                <div class="input-group input-group-sm" style="width: 300px;">
+                                    <input type="text" name="search" class="form-control float-right" placeholder="Search" value="{{ search_query }}">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
+                                        <a href="{% url 'manage_exam' %}" class="btn btn-default ml-2"><i class="fas fa-times"></i> Clear</a>
+                                    </div>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                     <div class="card-body table-responsive p-0">
@@ -155,24 +158,51 @@
     </div>
 </section>
 
+{% endblock main_content %}
+{% block extra_js %}
 <script>
-    $('#editExamModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget);
-        var examId = button.data('id');
-        var examName = button.data('name');
-        var examSubject = button.data('subject');
-        var examCourse = button.data('course');
-        var examSession = button.data('session');
-        var examDate = button.data('date');
+    $(document).ready(function () {
+        // Update subjects based on selected course
+        $('#edit-course').change(function () {
+            var courseId = $(this).val();
+            var $subjectSelect = $('#edit-subject');
+            
+            $subjectSelect.empty(); // Clear existing options
+            
+            if (courseId) {
+                $.ajax({
+                    url: '{% url "get_subjects_for_course" %}',
+                    data: { 'course_id': courseId },
+                    success: function (data) {
+                        // Populate subject select options
+                        $.each(data.subjects, function (index, subject) {
+                            $subjectSelect.append(
+                                $('<option>').val(subject.id).text(subject.name)
+                            );
+                        });
+                    }
+                });
+            }
+        });
 
-        var modal = $(this);
-        modal.find('#edit-exam-id').val(examId);
-        modal.find('#edit-exam-name').val(examName);
-        modal.find('#edit-subject').val(examSubject);
-        modal.find('#edit-course').val(examCourse);
-        modal.find('#edit-session').val(examSession);
-        modal.find('#edit-exam-date').val(examDate);
+        // Populate modal with exam data
+        $('#editExamModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            var examId = button.data('id');
+            var examName = button.data('name');
+            var subjectId = button.data('subject');
+            var courseId = button.data('course');
+            var sessionId = button.data('session');
+            var examDate = button.data('date');
+            
+            var modal = $(this);
+            modal.find('#edit-exam-id').val(examId);
+            modal.find('#edit-exam-name').val(examName);
+            modal.find('#edit-subject').val(subjectId);
+            modal.find('#edit-course').val(courseId).trigger('change'); // Trigger change to load subjects
+            modal.find('#edit-session').val(sessionId);
+            modal.find('#edit-exam-date').val(examDate);
+        });
     });
 </script>
-
-{% endblock main_content %}
+{% endblock extra_js %}

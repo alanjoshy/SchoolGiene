@@ -1,211 +1,252 @@
 {% load static %}
+{% load i18n %}
 
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
-      <!-- Brand Logo -->
-        <img src="{% static 'dist/img/AdminLTELogo.png' %}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
-            style="opacity: .8">
-        <span class="brand-text font-weight-light">Open University</span>
-      </a>
+  <!-- Brand Logo -->
+  <a href="{% url 'admin_dashboard' %}" class="brand-link">
+    <img src="{% static 'dist/img/AdminLTELogo.png' %}" alt="{% trans 'AdminLTE Logo' %}"
+      class="brand-image img-circle elevation-3" style="opacity: .8">
+    <span class="brand-text font-weight-light">{% trans 'Open University' %}</span>
+  </a>
 
-      <!-- Sidebar -->
-      <div class="sidebar">
-        <!-- Sidebar user panel (optional) -->
-        <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-          <div class="image">
-            <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle elevation-2" alt="User Image">
-          </div>
-          <div class="info">
-            <a href="#" class="d-block">{{ user.first_name }} {{ user.last_name }} {{ user.name }}</a>
-          </div>
-        </div>
-
-        <!-- Sidebar Menu -->
-        <nav class="mt-2">
-          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-            <!-- Add icons to the links using the .nav-icon class
-                with font-awesome or any other icon font library -->
-
-            <li class="nav-item">
-        
-              <a href="{% url 'admin_dashboard'%}" class="nav-link {% if request.path == admin_home %} active {% endif %}">
-                <i class="nav-icon fas fa-tachometer-alt"></i>
-                <p>
-                  Home
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'manage_staff' %}" class="nav-link">
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                  Manage Staff
-                </p>
-              </a>
-            </li>
-            
-            <li class="nav-item">
-              
-              <a href="{% url 'staff_register' %}" class="nav-link"> 
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                  Add Staff
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'manage_student' %}" class="nav-link">
-                <i class="nav-icon fas fa-user-graduate"></i>
-                <p>
-                  Manage Student
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              {% url 'add_student' as add_student %}
-              <a href="{% url 'register_student' %}" class="nav-link"> 
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                  Add Student
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'manage_course' %}" class="nav-link">
-                <i class="nav-icon fas fa-chalkboard"></i>
-                <p>
-                  Manage Course
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-            
-              <a href="{% url 'add_course' %}" class="nav-link">
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                  Add Course
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'manage_subject' %}" class="nav-link">
-                <i class="nav-icon fas fa-book"></i>
-                <p>
-                  Manage Subject
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'add_subject' %}" class="nav-link">
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                  Add Subject 
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'add_session' %}" class="nav-link">
-                <i class="nav-icon fas fa-book"></i>
-                <p>
-                  Add session
-                </p>
-              </a>
-            </li>
-            <li class="nav-item">
-              
-              <a href="{% url 'manage_session' %}" class="nav-link">
-                <i class="nav-icon fas fa-book"></i>
-                <p>
-                  Manage Session
-                </p>
-              </a>
-            </li>
-
-          
-            <li class="nav-item">
-              
-              <a href="{% url 'view_attendance' %}" class="nav-link"> 
-                <i class="nav-icon fas fa-calendar-alt"></i>
-                <p>
-                  View Attendance
-                </p>
-              </a>
-            </li>
-            <li class="nav-item">
-              
-              <a href="{% url 'add_exam' %}" class="nav-link">
-                <i class="nav-icon fas fa-calendar-alt"></i>
-                <p>
-                  Add Exam
-                </p>
-              </a>
-            </li>
-            <li class="nav-item">
-              
-              <a href="{% url 'manage_exam' %}" class="nav-link">
-                <i class="nav-icon fas fa-calendar-alt"></i>
-                <p>
-                  Manage Exam 
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'admin_student_feedback' %}" class="nav-link"> 
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                  Student Feedback
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'admin_staff_feedback' %}" class="nav-link">
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                  Stafff Feedback
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'student_view_leave' %}" class="nav-link">  
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                  Student Leave   
-                </p>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              
-              <a href="{% url 'staff_view_leave' %}" class="nav-link">
-                <i class="nav-icon fas fa-th"></i>
-                <p>
-                  Staff Leave
-                </p>
-              </a>
-            </li>
-
-          </ul>
-        </nav>
-        <!-- /.sidebar-menu -->
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- Sidebar user panel (optional) -->
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+      <div class="image">
+        <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle elevation-2"
+          alt="{% trans 'User Image' %}">
       </div>
-      <!-- /.sidebar -->
-    </aside>
+      <div class="info">
+        <a href="#" class="d-block">{{ user.first_name }} {{ user.last_name }}</a>
+      </div>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <nav class="mt-2">
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
+        <li class="nav-item">
+          <a href="{% url 'admin_dashboard' %}" class="nav-link {% if request.path == '/' %} active {% endif %}">
+            <i class="nav-icon fas fa-tachometer-alt"></i>
+            <p>{% trans 'Home' %}</p>
+          </a>
+        </li>
+
+        <!-- staff section -->
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-toggle="collapse" data-target="#basic-menu" aria-expanded="true">
+            <i class="nav-icon fas fa-cogs"></i>
+            <p>
+              {% trans 'Staff Section' %}
+              <i class="right fas fa-angle-down"></i>
+            </p>
+          </a>
+          <ul id="basic-menu" class="nav nav-treeview collapse show">
+
+            <li class="nav-item">
+              <a href="{% url 'manage_staff' %}"
+                class="nav-link {% if request.path == '/manage_staff/' %} active {% endif %}">
+                <i class="nav-icon fas fa-th"></i>
+                <p>{% trans 'Manage Staff' %}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'staff_register' %}"
+                class="nav-link {% if request.path == '/staff_register/' %} active {% endif %}">
+                <i class="nav-icon fas fa-user-plus"></i>
+                <p>{% trans 'Add Staff' %}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'staff_view_leave' %}"
+                class="nav-link {% if request.path == '/staff_view_leave/' %} active {% endif %}">
+                <i class="nav-icon fas fa-calendar-times"></i>
+                <p>{% trans 'Staff Leave' %}</p>
+              </a>
+            </li>
+        </li>
+        <li class="nav-item">
+          <a href="{% url 'admin_staff_feedback' %}"
+            class="nav-link {% if request.path == '/admin_staff_feedback/' %} active {% endif %}">
+            <i class="nav-icon fas fa-comments"></i>
+            <p>{% trans 'Staff Feedback' %}</p>
+          </a>
+        </li>
+
+
+      </ul>
+      </li>
+
+      <!-- student section -->
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-toggle="collapse" data-target="#basic-menu" aria-expanded="true">
+          <i class="nav-icon fas fa-cogs"></i>
+          <p>
+            {% trans 'Student Section' %}
+            <i class="right fas fa-angle-down"></i>
+          </p>
+        </a>
+        <ul id="basic-menu" class="nav nav-treeview collapse show">
+
+
+
+          <li class="nav-item">
+            <a href="{% url 'manage_student' %}"
+              class="nav-link {% if request.path == '/manage_student/' %} active {% endif %}">
+              <i class="nav-icon fas fa-user-graduate"></i>
+              <p>{% trans 'Manage Student' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'register_student' %}"
+              class="nav-link {% if request.path == '/register_student/' %} active {% endif %}">
+              <i class="nav-icon fas fa-user-plus"></i>
+              <p>{% trans 'Add Student' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'view_attendance' %}"
+              class="nav-link {% if request.path == '/view_attendance/' %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar-alt"></i>
+              <p>{% trans 'View Attendance' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'student_view_leave' %}"
+              class="nav-link {% if request.path == '/student_view_leave/' %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar-times"></i>
+              <p>{% trans 'Student Leave' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'admin_student_feedback' %}"
+              class="nav-link {% if request.path == '/admin_student_feedback/' %} active {% endif %}">
+              <i class="nav-icon fas fa-comments"></i>
+              <p>{% trans 'Student Feedback' %}</p>
+            </a>
+          </li>
+
+        </ul>
+      </li>
+
+
+      <!-- Academic section -->
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-toggle="collapse" data-target="#advanced-menu" aria-expanded="false">
+          <i class="nav-icon fas fa-cogs"></i>
+          <p>
+            {% trans 'Academic Activities' %}
+            <i class="right fas fa-angle-down"></i>
+          </p>
+        </a>
+        <ul id="advanced-menu" class="nav nav-treeview collapse">
+
+          <li class="nav-item">
+            <a href="{% url 'manage_course' %}"
+              class="nav-link {% if request.path == '/manage_course/' %} active {% endif %}">
+              <i class="nav-icon fas fa-chalkboard"></i>
+              <p>{% trans 'Manage Course' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'add_course' %}"
+              class="nav-link {% if request.path == '/add_course/' %} active {% endif %}">
+              <i class="nav-icon fas fa-chalkboard-teacher"></i>
+              <p>{% trans 'Add Course' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'manage_subject' %}"
+              class="nav-link {% if request.path == '/manage_subject/' %} active {% endif %}">
+              <i class="nav-icon fas fa-book"></i>
+              <p>{% trans 'Manage Subject' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'add_subject' %}"
+              class="nav-link {% if request.path == '/add_subject/' %} active {% endif %}">
+              <i class="nav-icon fas fa-book-reader"></i>
+              <p>{% trans 'Add Subject' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'add_session' %}"
+              class="nav-link {% if request.path == '/add_session/' %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar-plus"></i>
+              <p>{% trans 'Add Session' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'manage_session' %}"
+              class="nav-link {% if request.path == '/manage_session/' %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar"></i>
+              <p>{% trans 'Manage Session' %}</p>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- exam section -->
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-toggle="collapse" data-target="#advanced-menu" aria-expanded="false">
+          <i class="nav-icon fas fa-cogs"></i>
+          <p>
+            {% trans 'Exam Section' %}
+            <i class="right fas fa-angle-down"></i>
+          </p>
+        </a>
+        <ul id="advanced-menu" class="nav nav-treeview collapse">
+
+
+
+          <li class="nav-item">
+            <a href="{% url 'add_exam' %}" class="nav-link {% if request.path == '/add_exam/' %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar-plus"></i>
+              <p>{% trans 'Add Exam' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{% url 'manage_exam' %}"
+              class="nav-link {% if request.path == '/manage_exam/' %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar-check"></i>
+              <p>{% trans 'Manage Exam' %}</p>
+            </a>
+          </li>
+
+
+        </ul>
+      </li>
+
+      <!-- Fee management -->
+      <li class="nav-item">
+        <a href="#" class="nav-link" data-toggle="collapse" data-target="#advanced-menu" aria-expanded="false">
+          <i class="nav-icon fas fa-cogs"></i>
+          <p>
+            {% trans 'Fee management' %}
+            <i class="right fas fa-angle-down"></i>
+          </p>
+        </a>
+        <ul id="advanced-menu" class="nav nav-treeview collapse">
+
+          <li class="nav-item">
+            <a href="#" class="nav-link {% if request.path == '/add_exam/' %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar-plus"></i>
+              <p>{% trans 'Add Fees' %}</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link {% if request.path == '/manage_exam/' %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar-check"></i>
+              <p>{% trans 'Manage Fee' %}</p>
+            </a>
+          </li>
+
+        </ul>
+      </li>
+      </ul>
+    </nav>
+    <!-- /.sidebar-menu -->
+  </div>
+  <!-- /.sidebar -->
+</aside>

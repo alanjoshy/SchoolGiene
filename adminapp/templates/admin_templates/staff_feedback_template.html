@@ -1,4 +1,5 @@
 {% extends 'admin_templates/base_template.html' %}
+
 {% block page_title %}
     Staff Feedback
 {% endblock page_title %}
@@ -20,25 +21,24 @@
                     <!-- /.card-header -->
 
                     <div class="table-responsive">
+                        {% if feedback_list %}
                         <table class="table">
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Staff ID</th>
+                                    <th>Staff Username</th>
                                     <th>Staff Name</th>
-                                    <th>Staff Session</th>
                                     <th>Message</th>
-                                    <th>Sended On</th>
+                                    <th>Sent On</th>
                                     <th>Reply</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for feedback in feedbacks %}
+                                {% for feedback in feedback_list %}
                                 <tr>
                                     <td>{{ feedback.id }}</td>
-                                    <td>{{ feedback.student_id.admin.id }}</td>
-                                    <td>{{ feedback.student_id.admin.first_name }} {{ feedback.student_id.admin.last_name }}</td>
-                                    <td>{{ feedback.student_id.session_year_id.session_start_year }} - {{ feedback.student_id.session_year_id.session_end_year }}</td>
+                                    <td>{{ feedback.sender.username }}</td>
+                                    <td>{{ feedback.sender.first_name }} {{ feedback.sender.last_name }}</td>
                                     <td>{{ feedback.feedback }}</td>
                                     <td>{{ feedback.created_at }}</td>
                                     <td>
@@ -46,7 +46,7 @@
                                             {{ feedback.feedback_reply }}
                                         {% else %}
                                             <!-- Form for replying to feedback -->
-                                            <form method="POST" action="{% url 'admin_student_feedback' %}">  
+                                            <form method="POST" action="{% url 'admin_staff_feedback' %}">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="feedback_id" value="{{ feedback.id }}" />
                                                 <textarea name="reply" class="form-control" rows="3" placeholder="Write your reply here..."></textarea>
@@ -58,6 +58,9 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% else %}
+                        <p class="text-center">No feedback received</p>
+                        {% endif %}
                     </div>
                 </div>
                 <!-- /.card -->

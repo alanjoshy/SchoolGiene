@@ -1,0 +1,127 @@
+{% extends 'staff_templates/base_template.html' %}
+
+{% block page_title %}
+    Feedback Message
+{% endblock page_title %}
+
+{% block main_content %}
+
+{% load static %}
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="row">
+            <div class="col-md-12">
+                <!-- General form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Leave a Feedback Message</h3>
+                    </div>
+                    <!-- /.card-header -->
+
+                    {% comment %} Display Messages {% endcomment %}
+                    {% if messages %}
+                    <div class="form-group">
+                        <div class="col-12">
+                            {% for message in messages %}
+                            {% if message.tags == "error" %}
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                </div>
+                            {% elif message.tags == "success" %}
+                                <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="POST" action="{% url 'staff_feedback' %}">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Feedback Message</label>
+                                <textarea name="feedback_message" class="form-control" rows="6" placeholder="Write your feedback here..."></textarea>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                        </div>
+
+                    </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+
+        <!-- Feedback History Table -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-success">
+                    <div class="card-header">
+                        <h3 class="card-title">Feedback History</h3>
+                    </div>
+
+                    <div class="card-body">
+                        {% if feedback_list %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>#ID</th>
+                                        <th>Feedback Message</th>
+                                        <th>Sent On</th>
+                                        <th>Reply</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for feedback in feedback_list %}
+                                    <tr>
+                                        <td>{{ feedback.id }}</td>
+                                        <td>{{ feedback.feedback }}</td>
+                                        <td>{{ feedback.created_at }}</td>
+                                        <td>
+                                            {% if feedback.feedback_reply %}
+                                                {{ feedback.feedback_reply }}
+                                            {% else %}
+                                                <span class="text-muted">No reply yet</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4">No feedback history available.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p>No feedback history available.</p>
+                        {% endif %}
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.container-fluid -->
+</section>
+
+{% endblock main_content %}
+
+{% block custom_js %}
+
+{% endblock custom_js %}

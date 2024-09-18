@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import authenticate, login,logout 
 from django.contrib import messages
 from django.contrib.auth.models import User, auth
-from adminapp.models import ExamResult, SchoolUser,Subject,Leave,Feedback
+from adminapp.models import ExamResult, SchoolUser,Subject,Leave,Feedback,Course
 from staffapp.models import Attendance,get_attendance_statistics
 from django.core.cache import cache
 from django.views.decorators.cache import cache_control
@@ -12,10 +12,11 @@ from django.utils.dateparse import parse_date
 from django.contrib.auth.hashers import make_password
 from adminapp.views import home
 from django.utils import timezone
+from django.db.models import Sum
+
 
 # student login
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@login_required
 def student_login(request):
     if request.method == 'GET':
         if request.user.is_authenticated:
@@ -55,17 +56,13 @@ def student_login(request):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def student_dashboard(request):
-    
     student = request.user
-    
-    
+    # Calculate attendance
     total_present_days = Attendance.objects.filter(student=student, status=True).count()
     total_absent_days = Attendance.objects.filter(student=student, status=False).count()
-
-     
     total_days = Attendance.objects.filter(student=student).values_list('date', flat=True).distinct().count()
-    
-    
+
+    # Fetch subjects and attendance by subject
     subjects = Subject.objects.filter(students=student)
     attendance_by_subject_data = []
     subjects_labels = []
@@ -75,10 +72,23 @@ def student_dashboard(request):
         attendance_by_subject_data.append(attendance_count)
         subjects_labels.append(subject.name)
     
+    # Fetch marks for each subject
+    marks_data = []
+    subjects_marks_labels = []
+    
+    for subject in subjects:
+        # Assuming you have a way to get the student's marks for each subject
+        marks = ExamResult.objects.filter(student=student, exam__subject=subject).aggregate(marks=Sum('marks_obtained'))['marks'] or 0
+        marks_data.append(marks)
+        subjects_marks_labels.append(subject.name)
+    
     # Count total students, staff, courses, and subjects
     student_count = SchoolUser.objects.filter(role='student').count()
     staff_count = SchoolUser.objects.filter(role='staff').count()
     subject_count = Subject.objects.count()
+
+    # Count total leaves taken by the student
+    total_leaves_taken = Leave.objects.filter(user=student).count()
 
     context = {
         'total_present_days': total_present_days,
@@ -89,6 +99,9 @@ def student_dashboard(request):
         'student_count': student_count,
         'staff_count': staff_count,
         'subject_count': subject_count,
+        'marks_data': marks_data,
+        'subjects_marks_labels': subjects_marks_labels,
+        'total_leaves_taken': total_leaves_taken,  # Add this line
     }
 
     return render(request, 'student_home_template.html', context)
@@ -98,49 +111,86 @@ def student_dashboard(request):
 
 # student register
 @cache_control(no_cache=True, must_revalidate=True, no_store=True) 
-def student_register(request):
-    if request.method == 'POST':
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('lastname')
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        address = request.POST.get('address')
-        photo = request.FILES.get('photo')  # Handle file upload
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
+def register_student(request):
+    if request.method == "POST":
+        # Extract data from the form
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        address = request.POST.get("address")
+        course_id = request.POST.get("course_id")
+        profile_photo = request.FILES.get("profile_photo")
+        password1 = request.POST.get("password1")
+        password2 = request.POST.get("password2")
+
+        # Validate the data
+        if not (
+            first_name
+            and last_name
+            and username
+            and email
+            and phone
+            and password1
+            and password2
+            and course_id
+        ):
+            messages.error(request, "Please fill in all required fields.")
+            return redirect("register_student")
 
         if password1 != password2:
             messages.error(request, "Passwords do not match.")
-            return redirect('staff_register')
+            return redirect("register_student")
 
+        # Check if the username or email already exists
         if SchoolUser.objects.filter(username=username).exists():
-            messages.error(request, "Username already taken.")
-            return redirect('staff_register')
+            messages.error(request, "Username already exists.")
+            return redirect("register_student")
 
         if SchoolUser.objects.filter(email=email).exists():
-            messages.error(request, "Email already in use.")
-            return redirect('staff_register')
+            messages.error(request, "Email already exists.")
+            return redirect("register_student")
 
-        # Create the user
-        user = SchoolUser.objects.create_user(
+        try:
+            # Retrieve the selected course
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            messages.error(request, "Selected course does not exist.")
+            return redirect("register_student")
+
+        # Create and save the student
+        student = SchoolUser(
             first_name=first_name,
             last_name=last_name,
             username=username,
             email=email,
-            password=password1,
             phone=phone,
-            profile_photo=photo,
-            address = address,
+            address=address,
+            profile_photo=profile_photo,
+            role="student",
         )
+        student.set_password(password1)  # Hash the password
+        student.save()
 
-        # Ensure that the role is set to 'staff'
-        user.role = 'student'
-        user.save()
+        # Enroll the student in the selected course
+        course.enroll_student(student)
 
-        messages.success(request, "Student registered successfully.")
-        return redirect('admin_dashboard')  
-    return render(request, 'student_register.html')
+        # Provide feedback to the user
+        messages.success(
+            request,
+            "Data received, please wait for admin approval."
+        )
+        return redirect("student_login")
+
+    # If GET request, render the registration page
+    courses = Course.objects.all()
+    context = {
+        "courses": courses,
+    }
+
+    return render(request, "student_register.html", context)
+
 
 # cache 
 def clear_all_cache():
@@ -148,8 +198,7 @@ def clear_all_cache():
     
     
 # logout
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True) 
 def student_logout(request):
     auth.logout(request)  
     messages.success(request, 'You have been logged out.')
@@ -197,39 +246,49 @@ def attendance_view(request):
             messages.error(request, 'Start date cannot be later than end date.')
             return redirect('attendance_view')
 
+        # Check if end_date is in the future
+        if end_date > timezone.now().date():
+            messages.error(request, 'Future dates cannot be selected.')
+            return redirect('attendance_view')
+
         try:
             subject = Subject.objects.get(id=subject_id)
         except Subject.DoesNotExist:
             messages.error(request, 'Subject not found.')
             return redirect('attendance_view')
 
+        # Filter attendance for the logged-in student, selected subject, and date range
         attendance_data = Attendance.objects.filter(
             subject=subject,
+            student=request.user,  # Only fetch attendance for the logged-in student
             date__range=[start_date, end_date]
         )
 
         total_days = (end_date - start_date).days + 1
-        present_days = attendance_data.count()
+        present_days = attendance_data.filter(status=True).count()  # Count only present days
+        absent_days = attendance_data.filter(status=False).count()  # Count absent days
 
         context = {
-            'subjects': Subject.objects.all(),
+            'subjects': Subject.objects.filter(course__students=request.user),  # Filter relevant subjects
             'attendance_data': attendance_data,
             'selected_subject': subject,
             'start_date': start_date,
             'end_date': end_date,
             'total_days': total_days,
             'present_days': present_days,
+            'absent_days': absent_days,
         }
 
         return render(request, 'student_view_attendance.html', context)
 
     else:
-        subjects = Subject.objects.all()
+        # Fetch only subjects relevant to the student's course
+        subjects = Subject.objects.filter(course__students=request.user)  # Fetch subjects based on enrolled course
         context = {
             'subjects': subjects,
         }
-        return render(request, 'student_view_attendance.html', context) 
-    
+        return render(request, 'student_view_attendance.html', context)
+   
     
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required   
@@ -307,7 +366,6 @@ def student_apply_leave(request):
     }
 
     return render(request, 'student_apply_leave.html', context) 
-
 
 
 def student_feedback(request):

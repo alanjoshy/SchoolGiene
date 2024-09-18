@@ -22,17 +22,8 @@ ALLOWED_HOSTS = []
 AUTH_USER_MODEL = 'adminapp.SchoolUser'
 
 
-SITE_ID = 2
-
-
 # Application definition
 INSTALLED_APPS = [
-    # google apps @""
-    "django.contrib.sites",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
     'studentapp',
     'staffapp',
     'adminapp',
@@ -45,29 +36,20 @@ INSTALLED_APPS = [
 ]
 
 
-SOCIALACCOUNT_PROVIDERS = { 
-                           "google" : { 
-                            "SCOPE" : [
-                                "profile",
-                                "email"
-                                ],
-                                "AUTH_PARAMS" : { "access_type" : "online"}
-                            }
-                        }
-
-
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # allauth
-    'allauth.account.middleware.AccountMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'projectschoolgieneparallel.urls'
@@ -149,14 +131,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-AUTHENTICATION_BACKENDS = ( 
-                           "django.contrib.auth.backends.ModelBackend",
-                           "allauth.account.auth_backends.AuthenticationBackend"
-                           )
-
-LOGIN_REDIRECT_URL = "student_dashboard/"
-LOGOUT_REDIRECT_URL = "/" 
 
 
 

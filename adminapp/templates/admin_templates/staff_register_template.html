@@ -74,7 +74,7 @@
             <!-- Profile Photo -->
             <div class="form-group">
                 <label for="profile_photo">Upload Photo:</label>
-                <input type="file" name="profile_photo" id="profile_photo" class="form-control-file" required>
+                <input type="file" name="profile_photo" id="profile_photo" class="form-control-file" accept="image/*" required>
             </div>
 
             <!-- Password -->
@@ -97,4 +97,15 @@
     </form>
 
 </div>
-{% endblock main_content %}
+{% endblock main_content %} 
+{% block extra_js %}
+<script>
+    document.getElementById('profile_photo').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file && !file.type.startsWith('image/')) {
+            alert('Please upload a valid image file.');
+            event.target.value = ''; // Clear the file input
+        }
+    });
+    </script>
+{% endblock extra_js %}

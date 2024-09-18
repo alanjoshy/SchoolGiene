@@ -81,7 +81,7 @@
             </div>
           </div>
           <div class="card-body">
-            <div id="pieChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
+            <div id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
           </div>
           <!-- /.card-body -->
         </div>
@@ -113,18 +113,22 @@
         <!-- PIE CHART -->
         <div class="card card-info">
           <div class="card-header">
-            <h3 class="card-title">Total Students in Each Course</h3>
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                  class="fas fa-minus"></i></button>
-              <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
-            </div>
+              <h3 class="card-title">Total Students in Each Course</h3>
+              <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                      <i class="fas fa-minus"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool" data-card-widget="remove">
+                      <i class="fas fa-times"></i>
+                  </button>
+              </div>
           </div>
           <div class="card-body">
-            <div id="pieChart2" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
+              <!-- Bar Chart Container -->
+              <div id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
           </div>
-          <!-- /.card-body -->
-        </div>
+      </div>
+      
       </div>
 
       <div class="col-lg-6">
@@ -146,49 +150,12 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-lg-12">
-        <!-- BAR CHART -->
-        <div class="card card-success">
-          <div class="card-header">
-            <h3 class="card-title">Staff Attendance vs Leave</h3>
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                  class="fas fa-minus"></i></button>
-              <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
-            </div>
-          </div>
-          <div class="card-body">
-            <div id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
-          </div>
-          <!-- /.card-body -->
-        </div>
-        <!-- /.card -->
-      </div>
-    </div>
+   
 
-    <div class="row">
-      <div class="col-lg-12">
-        <!-- BAR CHART -->
-        <div class="card card-success">
-          <div class="card-header">
-            <h3 class="card-title">Student Attendance vs Leave</h3>
-            <div class="card-tools">
-              <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                  class="fas fa-minus"></i></button>
-              <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
-            </div>
-          </div>
-          <div class="card-body">
-            <div id="barChart2" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
-          </div>
-          <!-- /.card-body -->
-        </div>
-        <!-- /.card -->
-      </div>
-    </div>
+    
   </div><!-- /.container-fluid -->
-</section>
+</section> 
+
 
 {% endblock main_content %}
 
@@ -199,22 +166,42 @@
     // Pie Chart for Staff and Students
     var staff_count = {{ staff_count }};
     var student_count = {{ student_count }};
-
+    
     var options1 = {
-      series: [staff_count, student_count],
+      series: [{
+        name: 'Count',
+        data: [staff_count, student_count]  // Data for the bar chart
+      }],
       chart: {
         height: 350,
-        type: 'pie'
+        type: 'bar'  // Change to 'bar' for bar chart
       },
-      labels: ['Staff', 'Students'],
-      title: {
-       
-        align: 'left'
-      }
+      plotOptions: {
+        bar: {
+          columnWidth: '20%',  // Set the width of the bars
+          distributed: true  // Different colors for each bar
+        }
+      },
+      dataLabels: {
+        enabled: false  // Disable data labels on the bars
+      },
+      xaxis: {
+        categories: ['Staff', 'Students'],  // Labels for the x-axis
+        title: {
+           // Title for the x-axis
+        }
+      },
+      yaxis: {
+        title: {
+          text: 'Count'  // Title for the y-axis
+        }
+      },
+      
     };
-
-    var chart1 = new ApexCharts(document.querySelector("#pieChart"), options1);
+    
+    var chart1 = new ApexCharts(document.querySelector("#barChart"), options1);
     chart1.render();
+    
 
     var staff_count = {{ staff_count }};
     var student_count = {{ student_count }};
@@ -236,22 +223,49 @@
     var chart2 = new ApexCharts(document.querySelector("#donutChart"), options2);
     chart2.render();
 
-    // Pie Chart for Total Students in Each Course
-    var options3 = {
-      series: [15, 25, 35, 45, 55], // Update with actual data
-      chart: {
-        height: 350,
-        type: 'pie'
-      },
-      labels: ['Course 1', 'Course 2', 'Course 3', 'Course 4', 'Course 5'],
-      title: {
-       
-        align: 'left'
-      }
+    var courseNames = JSON.parse('{{ course_names|escapejs }}');
+    var studentCounts = JSON.parse('{{ student_counts|escapejs }}');
+
+    // Bar Chart options
+    var optionsBarChart = {
+        series: [{
+            name: 'Students',
+            data: studentCounts  // The student counts for each course
+        }],
+        chart: {
+            type: 'bar',
+            height: 350
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                columnWidth: '50%',
+                endingShape: 'rounded'
+            },
+        },
+        dataLabels: {
+            enabled: false
+        },
+        xaxis: {
+            categories: courseNames,  // Course names
+            title: {
+                text: 'Courses'
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Number of Students'
+            }
+        },
+        title: {
+            text: "Total Students in Each Course",
+            align: 'left'
+        }
     };
 
-    var chart3 = new ApexCharts(document.querySelector("#pieChart2"), options3);
-    chart3.render();
+    // Render the bar chart in the specified container
+    var chartBar = new ApexCharts(document.querySelector("#barChart"), optionsBarChart);
+    chartBar.render();
 
     // Pie Chart for Total Students in Each Subject
     var options4 = {

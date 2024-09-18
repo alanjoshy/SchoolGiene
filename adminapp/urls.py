@@ -1,15 +1,7 @@
-from django.contrib.auth.views import (
-    PasswordResetView,
-    PasswordResetDoneView,
-    PasswordResetConfirmView,
-    PasswordResetCompleteView,
-)
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    # password reset
-    # home page initial page
     path("", views.home, name="home"),
     # admin login
     path("admin_login/", views.admin_login, name="admin_login"),

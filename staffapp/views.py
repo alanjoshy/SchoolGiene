@@ -2,7 +2,7 @@ from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from adminapp.models import SchoolUser, Subject, Course, ExamResult, Exam, Session , Leave
+from adminapp.models import SchoolUser, Subject, Course, ExamResult, Exam, Session , Leave,Feedback
 from staffapp.models import Attendance
 from django.views.decorators.cache import cache_control
 from django.core.cache import cache
@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
+from django.utils.timezone import now
 
 
 # cache
@@ -20,29 +21,63 @@ def clear_all_cache():
 
 # staff home
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def staff_dashboard(request):
-    subjects_assigned_count = Subject.objects.filter(
-        staff_assigned=request.user
-    ).count()
-    students_count = (
-        SchoolUser.objects.filter(subjects_enrolled__staff_assigned=request.user)
-        .distinct()
-        .count()
+    # Get the current year
+    current_year = now().year
+
+    # Leave data for the current year
+    leave_data = (
+        Leave.objects.filter(user=request.user, start_date__year=current_year)
+        .values('start_date__month')
+        .annotate(total_leaves=Count('id'))
+        .order_by('start_date__month')
     )
-    attendance_count = Attendance.objects.filter(
-        subject__staff_assigned=request.user
-    ).count()
+
+    # Initialize the months and leave counts
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    leave_count_by_month = [0] * 12  # Initialize counts for each month (0 - 11)
+
+    # Populate the leave counts
+    for data in leave_data:
+        month_index = data['start_date__month'] - 1  # 0-based index for months
+        leave_count_by_month[month_index] = data['total_leaves']
+    
+    # Subject view
+    subjects = Subject.objects.filter(staff_assigned=request.user)
+    subject_names = []
+    student_counts = []
+
+    for subject in subjects:
+        count = SchoolUser.objects.filter(subjects_enrolled=subject).count()
+        subject_names.append(subject.name)
+        student_counts.append(count)
+
+    # Count total students, staff, courses, and subjects
+    subjects_assigned_count = subjects.count()
+    students_count = SchoolUser.objects.filter(subjects_enrolled__in=subjects).distinct().count()
+    attendance_count = Attendance.objects.filter(subject__in=subjects).count()
+
+    # Count total leaves taken by the staff member
+    total_leaves_taken = Leave.objects.filter(user=request.user).count()
+
     context = {
         "staff_name": request.user.username,
         "subjects_assigned_count": subjects_assigned_count,
         "students_count": students_count,
         "attendance_count": attendance_count,
+        'leave_count_by_month': leave_count_by_month,
+        'months': months,
+        'subject_names': subject_names,
+        'student_counts': student_counts,
+        'total_leaves_taken': total_leaves_taken,  # Add this line
     }
+    
     return render(request, "staff_templates/staff_home_template.html", context)
-
 
 # staff registration
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+
 def staff_register(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -84,6 +119,7 @@ def staff_register(request):
     return render(request, "staff_templates/staff_register.html")
 
 
+# staff login section
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def staff_login(request):
     if request.method == "POST":
@@ -116,6 +152,7 @@ def staff_login(request):
 
 # admin logout
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def staff_logout(request):
     auth.logout(request)
     messages.success(request, "You have been logged out.")
@@ -125,6 +162,7 @@ def staff_logout(request):
 
 # take attendence
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def take_attendance(request):
     subjects = Subject.objects.filter(staff_assigned=request.user)
     students = []
@@ -143,11 +181,9 @@ def take_attendance(request):
                 messages.error(request, "Invalid date format. Please use YYYY-MM-DD.")
                 return redirect("take_attendance")
 
-            # Check if the attendance date is in the past
-            if attendance_date < timezone.now().date():
-                messages.error(
-                    request, "Previous dates cannot be selected for attendance."
-                )
+            # Check if the attendance date is in the future
+            if attendance_date > timezone.now().date():
+                messages.error(request, "Future dates cannot be selected for attendance.")
                 return redirect("take_attendance")
 
         if subject_id and attendance_date:
@@ -194,17 +230,13 @@ def take_attendance(request):
 
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def view_attendance(request):
-    subjects = Subject.objects.filter(staff_assigned=request.user)
-    return render(
-        request,
-        "staff_templates/update_attendance_template.html",
-        {
-            "subjects": subjects,
-        },
-    )
+    # subjects = Subject.objects.filter(staff_assigned=request.user)
+    return render(request,"staff_templates/update_attendance_template.html")
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
 def view_results(request):
     return render(
         request,
@@ -219,38 +251,26 @@ def add_result(request):
     exams = []
     students = []
     selected_subject_id = None
-
     selected_exam_id = None
 
     if request.method == "POST":
         if "fetch_students" in request.POST:
             subject_id = request.POST.get("subject")
 
-            print(f"Fetching students for Subject ID: {subject_id} ")
-
             if subject_id:
-                # Fetch the selected subject
                 selected_subject = get_object_or_404(
                     Subject, id=subject_id, staff_assigned=request.user
                 )
                 selected_subject_id = subject_id
                 students = selected_subject.students.filter(role="student")
-
-                # Fetch related sessions and exams
-
                 exams = Exam.objects.all()
 
         elif "save_result" in request.POST:
             subject_id = request.POST.get("subject")
-
             exam_id = request.POST.get("exam")
             student_id = request.POST.get("student_id")
             assignment_marks = request.POST.get("assignment_marks")
             exam_marks = request.POST.get("exam_marks")
-
-            print(
-                f"Saving result with Subject ID: {subject_id}, Exam ID: {exam_id}, Student ID: {student_id}, Assignment Marks: {assignment_marks}, Exam Marks: {exam_marks}"
-            )
 
             if (
                 subject_id
@@ -259,6 +279,10 @@ def add_result(request):
                 and assignment_marks
                 and exam_marks
             ):
+                if float(assignment_marks) < 0 or float(exam_marks) < 0:
+                    messages.error(request, "Negative marks cannot be added for exam and assignment.")
+                    return redirect("add_result")
+
                 selected_subject = get_object_or_404(
                     Subject, id=subject_id, staff_assigned=request.user
                 )
@@ -268,9 +292,7 @@ def add_result(request):
                         id=exam_id,
                         subject=selected_subject,
                     )
-                    print(f"Exam found: {selected_exam}")
                 except Exam.DoesNotExist:
-                    print(f"Exam not found - ID: {exam_id}, Subject ID: {subject_id}")
                     messages.error(request, "The selected exam does not exist.")
                     return redirect("add_result")
 
@@ -287,9 +309,7 @@ def add_result(request):
                 )
 
                 messages.success(request, "Result has been successfully saved!")
-                return redirect(
-                    "add_result"
-                )  # Redirect to the same page to reset form and show messages
+                return redirect("add_result")
             else:
                 messages.error(request, "Please fill in all fields to save the result.")
     else:
@@ -307,9 +327,9 @@ def add_result(request):
         },
     )
 
-
-
-def staff_apply_leave(request):
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
+def staff_apply_leave(request): 
     if request.method == 'POST':
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
@@ -352,3 +372,30 @@ def staff_apply_leave(request):
         'leaves': leaves,
     }
     return render(request,'staff_templates/staff_apply_leave_template.html') 
+
+
+@login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def staff_feedback(request):
+    if request.method == "POST":
+        feedback_message = request.POST.get('feedback_message')
+        
+        if feedback_message:
+            feedback = Feedback(
+                sender_role='staff',
+                sender=request.user,
+                feedback=feedback_message,
+                created_at=timezone.now()
+            )
+            feedback.save()
+            messages.success(request, "Feedback uploaded successfully.")
+            return redirect('staff_feedback')  # Redirect to avoid form resubmission
+
+    # Fetch all feedback sent by staff
+    feedback_list = Feedback.objects.filter(sender_role='staff').order_by('-created_at')
+    
+    context = {
+        'feedback_list': feedback_list,
+    }
+    
+    return render(request, 'staff_templates/staff_feedback_template.html', context) 

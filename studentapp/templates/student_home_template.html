@@ -47,9 +47,9 @@ Student Home
                 <!-- small box -->
                 <div class="small-box bg-warning">
                     <div class="inner">
-                        <h3>{{ total_days }}</h3>
+                        <h3>{{ total_leaves_taken }}</h3>
 
-                        <p>Total days</p>
+                        <p>Total Leave</p>
                     </div>
                     <div class="icon">
                         <i class="ion ion-stats-bars"></i>
@@ -101,54 +101,56 @@ Student Home
                 <!-- /.card -->
             </div>
 
-            <div class="col-lg-6">
+           
                 <!-- PIE CHART -->
-                <div class="card card-success">
-                    <div class="card-header">
-                        <h3 class="card-title">Attendance Statistics by Subjects</h3>
-
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                                    class="fas fa-minus"></i>
-                            </button>
-                            <button type="button" class="btn btn-tool" data-card-widget="remove"><i
-                                    class="fas fa-times"></i></button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="attendanceBySubjectPieChart"
-                            style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
-                    </div>
-                    <!-- /.card-body -->
-                </div>
-                <!-- /.card -->
-            </div> 
+                <div class="col-lg-6">
+                    <!-- BAR CHART -->
+                    <div class="card card-info">
+                      <div class="card-header">
+                          <h3 class="card-title">Marks on Each Subject</h3>
+  
+                          <div class="card-tools">
+                              <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
+                                      class="fas fa-minus"></i>
+                              </button>
+                              <button type="button" class="btn btn-tool" data-card-widget="remove"><i
+                                      class="fas fa-times"></i></button>
+                          </div>
+                      </div>
+                      <div class="card-body">
+                          <div id="marksBarChart"
+                              style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
+                      </div>
+                      <!-- /.card-body -->
+                  </div>
+                  <!-- /.card -->
+              </div> 
+                <!-- /.card --> 
+           
             
             
         </div> 
         <div class="row">
             <div class="col-lg-6">
-                <!-- PIE CHART -->
-                <div class="card card-info">
-                    <div class="card-header">
-                        <h3 class="card-title">Mark on Each subjects</h3>
+            <div class="card card-success">
+                <div class="card-header">
+                    <h3 class="card-title">Attendance Statistics by Subjects</h3>
 
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                                    class="fas fa-minus"></i>
-                            </button>
-                            <button type="button" class="btn btn-tool" data-card-widget="remove"><i
-                                    class="fas fa-times"></i></button>
-                        </div>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
+                                class="fas fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool" data-card-widget="remove"><i
+                                class="fas fa-times"></i></button>
                     </div>
-                    <div class="card-body">
-                        <div id="attendancePieChart"
-                            style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
-                    </div>
-                    <!-- /.card-body -->
                 </div>
-                <!-- /.card -->
-            </div>          
+                <div class="card-body">
+                    <div id="attendanceBySubjectPieChart"
+                        style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
+                </div>
+                <!-- /.card-body -->
+            </div>    
+            </div>     
         </div>
 
     </div><!-- /.container-fluid -->
@@ -197,7 +199,46 @@ Student Home
       };
   
       var chart2 = new ApexCharts(document.querySelector("#attendanceBySubjectPieChart"), options2);
-      chart2.render();
+      chart2.render(); 
+
+
+      var marksData = {{ marks_data|safe }};
+      var subjectsMarksLabels = {{ subjects_marks_labels|safe }};
+      
+      var options3 = {
+          series: [{
+              name: 'Marks',
+              data: marksData
+          }],
+          chart: {
+              height: 350,
+              type: 'bar'
+          },
+          plotOptions: {
+              bar: {
+                  columnWidth: '50%',
+                  distributed: true  // Make each bar have different colors
+              }
+          },
+          dataLabels: {
+              enabled: false  // Hide data labels on bars
+          },
+          xaxis: {
+              categories: subjectsMarksLabels,  // Subject names on the x-axis
+              title: {
+                  text: 'Subjects'  // Label for the x-axis
+              }
+          },
+          yaxis: {
+              title: {
+                  text: 'Marks'  // Label for the y-axis
+              }
+          },
+      };
+
+      // Render the bar chart
+      var chart3 = new ApexCharts(document.querySelector("#marksBarChart"), options3);
+      chart3.render();
     });
   </script>
   

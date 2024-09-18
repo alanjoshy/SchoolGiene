@@ -11,7 +11,7 @@ Manage Staff
 <section class="content">
     <div class="container-fluid">
 
-        <a class="btn btn-primary" href="#" role="button">+ Add Student</a> <br />&nbsp;
+        <a class="btn btn-primary" href="{% url 'staff_register' %}" role="button">+ Add Staff</a> <br />&nbsp;
 
         {% if messages %}
         <div class="form-group">
@@ -43,13 +43,20 @@ Manage Staff
                     <div class="card-header">
                         <h3 class="card-title">Staff Details</h3>
                         <div class="card-tools">
-                            <div class="input-group input-group-sm" style="width: 150px;">
-                                <input type="text" name="table_search" class="form-control float-right"
-                                    placeholder="Search">
-                                <div class="input-group-append">
-                                    <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
+                            <!-- Search Form -->
+                            <form method="get" action="{% url 'manage_staff' %}" class="form-inline">
+                                <div class="input-group input-group-sm" style="width: 250px;">
+                                    <input type="text" name="search" class="form-control float-right"
+                                        placeholder="Search" value="{{ search_query }}">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-default"><i class="fas fa-search"></i></button>
+                                        <!-- Clear Button -->
+                                        <a href="{% url 'manage_staff' %}" class="btn btn-default ml-2">
+                                            <i class="fas fa-times"></i> Clear
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                     <div class="card-body table-responsive p-0">
@@ -123,16 +130,11 @@ Manage Staff
                     <input type="hidden" id="staff_id" name="staff_id">
                     <div class="form-group">
                         <label for="first_name">First Name:</label>
-                        <input type="text" id="first_name" name="first_name" class="form-control" maxlength="100"
-                            required>
+                        <input type="text" id="first_name" name="first_name" class="form-control" maxlength="100" required>
                     </div>
-                    <input type="hidden" name="staff_id" value="{{ staff.id }}">
-                    <!-- Other fields like first_name, last_name, etc. -->
-                    <input type="submit" value="Update Staff">
                     <div class="form-group">
                         <label for="last_name">Last Name:</label>
-                        <input type="text" id="last_name" name="last_name" class="form-control" maxlength="100"
-                            required>
+                        <input type="text" id="last_name" name="last_name" class="form-control" maxlength="100" required>
                     </div>
                     <div class="form-group">
                         <label for="username">Username:</label>
@@ -148,19 +150,19 @@ Manage Staff
                     </div>
                     <div class="form-group">
                         <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" class="form-control" maxlength="100" required>
+                        <input type="email" id="email" name="email" class="form-control" maxlength="255">
                     </div>
                     <div class="form-group">
-                        <label for="profile_photo">Upload Photo:</label>
-                        <input type="file" name="profile_photo" id="profile_photo" class="form-control-file">
+                        <label for="profile_photo">Profile Photo:</label>
+                        <input type="file" id="profile_photo" name="profile_photo" class="form-control-file">
                     </div>
                     <div class="form-group">
                         <label for="password1">Password:</label>
-                        <input type="password" id="password1" name="password1" class="form-control" maxlength="50">
+                        <input type="password" id="password1" name="password1" class="form-control" maxlength="100">
                     </div>
                     <div class="form-group">
                         <label for="password2">Confirm Password:</label>
-                        <input type="password" id="password2" name="password2" class="form-control" maxlength="50">
+                        <input type="password" id="password2" name="password2" class="form-control" maxlength="100">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -172,28 +174,29 @@ Manage Staff
     </div>
 </div>
 
-{% endblock main_content %}
-
-<!-- Script to populate modal with staff data -->
+<!-- Script for Populating Edit Modal -->
 <script>
+document.addEventListener("DOMContentLoaded", function () {
     $('#editModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Button that triggered the modal
-        var id = button.data('id');
-        var first_name = button.data('first_name');
-        var last_name = button.data('last_name');
+        var button = $(event.relatedTarget);
+        var staffId = button.data('id');
+        var firstName = button.data('first_name');
+        var lastName = button.data('last_name');
         var username = button.data('username');
         var email = button.data('email');
         var phone = button.data('phone');
         var address = button.data('address');
 
-        // Populate modal with data
         var modal = $(this);
-        modal.find('#staff_id').val(id);
-        modal.find('#first_name').val(first_name || '');
-        modal.find('#last_name').val(last_name || '');
+        modal.find('#staff_id').val(staffId);
+        modal.find('#first_name').val(firstName);
+        modal.find('#last_name').val(lastName);
         modal.find('#username').val(username);
         modal.find('#email').val(email);
         modal.find('#phone').val(phone);
         modal.find('#address').val(address);
     });
+});
 </script>
+
+{% endblock %}
