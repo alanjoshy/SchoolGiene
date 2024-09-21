@@ -24,6 +24,8 @@ AUTH_USER_MODEL = 'adminapp.SchoolUser'
 
 # Application definition
 INSTALLED_APPS = [
+    'channels',
+    'chatapp',
     'studentapp',
     'staffapp',
     'adminapp',
@@ -52,7 +54,21 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-ROOT_URLCONF = 'projectschoolgieneparallel.urls'
+ROOT_URLCONF = 'projectschoolgieneparallel.urls' 
+
+# Channels configuration
+ASGI_APPLICATION = 'projectschoolgieneparallel.asgi.application' 
+
+# Redis configuration for Channels Layer
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}
+
 
 TEMPLATES = [
     {
