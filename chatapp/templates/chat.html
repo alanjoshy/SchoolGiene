@@ -14,7 +14,7 @@ Chat
                     {% for user in users %}
                         <div class="user-avatar mb-2" style="cursor: pointer;" onclick="loadChat('{{ user.username }}')">
                             <div style="border-radius: 50%; width: 50px; height: 50px; background-color: #007bff; display: flex; align-items: center; justify-content: center; color: white;">
-                                {{ user.username|slice:":1" }} 
+                                {{ user.username|slice:":1" }}
                             </div>
                             <div>{{ user.username }}</div>
                         </div>
@@ -25,23 +25,14 @@ Chat
             <div class="col-md-9">
                 <div class="card card-primary">
                     <div class="card-header d-flex justify-content-between">
-                        <h3 class="card-title">{{ user_to_chat.username }}</h3>
+                        <h3 class="card-title" id="chat-with">Select a user to start chatting</h3>
                     </div>
                     <div class="card-body" id="chat-box" style="height: 400px; overflow-y: scroll; padding: 10px; background-color: #f4f6f9;">
-                        {% for message in messages %}
-                            <div class="message" style="text-align: {% if message.sender == request.user %} right {% else %} left {% endif %}; margin-bottom: 15px;">
-                                <div style="display: inline-block; max-width: 70%; padding: 10px; border-radius: 10px; background-color: {% if message.sender == request.user %} #007bff {% else %} #f1f1f1 {% endif %}; color: {% if message.sender == request.user %} white {% else %} black {% endif %};">
-                                    <p style="margin: 0;">{{ message.content }}</p>
-                                    <small class="text-muted" style="color: {% if message.sender == request.user %} rgba(255, 255, 255, 0.7) {% else %} #6c757d {% endif %};">{{ message.timestamp|date:"H:i" }}</small>
-                                </div>
-                            </div>
-                        {% empty %}
-                            <p>No messages yet.</p>
-                        {% endfor %}
+                        <!-- Messages will be appended here -->
                     </div>
 
                     <div class="card-footer">
-                        <form id="chat-form" method="POST" class="form-inline" onsubmit="sendMessage(event, '{{ user_to_chat.username }}')">
+                        <form id="chat-form" class="form-inline">
                             {% csrf_token %}
                             <div class="input-group" style="width: 100%;">
                                 <textarea name="content" id="message-input" class="form-control" placeholder="Type a message" rows="2" style="resize: none;"></textarea>
@@ -58,63 +49,129 @@ Chat
 </section>
 
 <script>
-    let pollingInterval;
-
+    let currentReceiver = null;
+    let lastMessageTimestamp = null;
+    let fetchTimeout = null;
+    let lastFetchTime = 0;
+    const DEBOUNCE_DELAY = 1000; // 1 second debounce delay
+    const MIN_FETCH_INTERVAL = 5000; // Minimum 5 seconds between fetches
+    
     function loadChat(username) {
-        // Clear previous polling if any
-        clearInterval(pollingInterval);
+        currentReceiver = username;
+        document.getElementById('chat-with').textContent = username;
+        document.getElementById('chat-box').innerHTML = '';
+        lastMessageTimestamp = null;
+        
+        // Clear existing timeout
+        if (fetchTimeout) {
+            clearTimeout(fetchTimeout);
+        }
     
         // Fetch initial messages
-        fetch(`/fetch-messages/${username}/`)
+        fetchMessages();
+    
+        // Start debounced polling for new messages
+        scheduleFetch();
+    }
+    
+    function scheduleFetch() {
+        if (fetchTimeout) {
+            clearTimeout(fetchTimeout);
+        }
+        fetchTimeout = setTimeout(fetchMessages, DEBOUNCE_DELAY);
+    }
+    
+    function fetchMessages() { 
+        const now = Date.now();
+        if (now - lastFetchTime < MIN_FETCH_INTERVAL) {
+            // If it's too soon since the last fetch, schedule another attempt
+            scheduleFetch();
+            return;
+        }
+    
+        lastFetchTime = now;
+    
+        const url = lastMessageTimestamp 
+            ? `/fetch-messages/${currentReceiver}/?after=${encodeURIComponent(lastMessageTimestamp)}`
+            : `/fetch-messages/${currentReceiver}/`;
+    
+        fetch(url)
             .then(response => response.json())
             .then(data => {
-                const chatBox = document.getElementById('chat-box');
-                chatBox.innerHTML = ''; // Clear the chat box
-                
                 data.forEach(message => {
                     appendMessage(message);
+                    lastMessageTimestamp = message.timestamp;
                 });
-    
-                chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to the bottom
+                if (!lastMessageTimestamp && data.length > 0) {
+                    lastMessageTimestamp = data[data.length - 1].timestamp;
+                }
+                scrollToBottom();
+                scheduleFetch(); // Schedule next fetch
             })
-            .catch(error => console.error('Error loading messages:', error));
+            .catch(error => {
+                console.error('Error loading messages:', error);
+                scheduleFetch(); // Retry on error
+            });
+    }
     
-        // Start polling for new messages every 5 seconds
-        pollingInterval = setInterval(() => {
-            fetch(`/fetch-messages/${username}/`)
-                .then(response => response.json())
-                .then(data => {
-                    const chatBox = document.getElementById('chat-box');
-                    data.forEach(message => {
-                        appendMessage(message);
-                    });
+    document.getElementById('chat-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        if (!currentReceiver) {
+            alert('Please select a user to chat with first.');
+            return;
+        }
+        sendMessage();
+    });
     
-                    chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to the bottom
-                })
-                .catch(error => console.error('Error loading messages:', error));
-        }, 5000); // 5000 milliseconds = 5 seconds
+    function sendMessage() {
+        const messageInput = document.getElementById('message-input');
+        const content = messageInput.value.trim();
+    
+        if (content === '') return;
+    
+        fetch(`/send-message/${currentReceiver}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ content: content })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                appendMessage(data.message);
+                messageInput.value = '';
+                lastMessageTimestamp = data.message.timestamp;
+                scheduleFetch(); // Trigger a fetch after sending a message
+            } else {
+                console.error('Error sending message:', data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
     }
     
     function appendMessage(message) {
         const chatBox = document.getElementById('chat-box');
-        const senderSide = message.sender === "{{ request.user.username }}" ? 'right' : 'left';
-        const bgColor = senderSide === 'right' ? '#007bff' : '#f1f1f1';
-        const textColor = senderSide === 'right' ? 'white' : 'black';
-        const timeColor = senderSide === 'right' ? 'rgba(255, 255, 255, 0.7)' : '#6c757d';
-    
-        chatBox.innerHTML += `
-            <div class="message" style="text-align: ${senderSide}; margin-bottom: 15px;">
-                <div style="display: inline-block; max-width: 70%; padding: 10px; border-radius: 10px; background-color: ${bgColor}; color: ${textColor};">
-                    <p style="margin: 0;">${message.content}</p>
-                    <small class="text-muted" style="color: ${timeColor};">${message.timestamp.split(' ')[1]}</small>
-                </div>
-            </div>`;
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.style.textAlign = message.sender === currentUser ? 'right' : 'left';
+        messageDiv.innerHTML = `
+            <div style="display: inline-block; max-width: 70%; padding: 10px; border-radius: 10px; background-color: ${message.sender === currentUser ? '#007bff' : '#f1f1f1'}; color: ${message.sender === currentUser ? 'white' : 'black'};">
+                <p style="margin: 0;">${message.content}</p>
+                <small class="text-muted">${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+            </div>
+        `;
+        chatBox.appendChild(messageDiv);
+        scrollToBottom();
     }
     
-    // Send message function remains the same
-    function sendMessage(event, receiverUsername) {
-        // (unchanged)
+    function scrollToBottom() {
+        const chatBox = document.getElementById('chat-box');
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
     
+    // Make sure to set the current user's username in your template
+    const currentUser = '{{ request.user.username }}';
 </script>
-{% endblock main_content %}
+{% endblock main_content %} 

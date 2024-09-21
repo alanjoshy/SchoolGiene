@@ -3,7 +3,7 @@ from django.utils import timezone
 from adminapp.models import SchoolUser
 from django.contrib.auth import get_user_model# Import SchoolUser from the app where it's defined
 
-User = get_user_model()
+
 
 class Message(models.Model):
     sender = models.ForeignKey(SchoolUser, on_delete=models.CASCADE, related_name='sent_messages')
