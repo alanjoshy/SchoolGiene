@@ -24,6 +24,7 @@ AUTH_USER_MODEL = 'adminapp.SchoolUser'
 
 # Application definition
 INSTALLED_APPS = [
+    'paymentapp',
     'channels',
     'chatapp',
     'studentapp',
@@ -37,6 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+# paypal settings
+PAYPAL_CLIENT_ID = 'AQRrSf-b6e32sahReoujDoltc2Xu9x_O3nfGaIOazmzIHEneW_-7JP4VOe8rpcZoJZ0i7hdIEgjM7Ubz' 
+PAYPAL_CLIENT_SECRET = 'EIQjO-FGKfHSP3qeDspLwPnrOyCfXQpbgN2fQMNbtCaQ6usCLuAaMHM5jpxw8OPhzHjPYW8cvUvR-RMd'
+PAYPAL_MODE = 'sandbox'
 
 
 MIDDLEWARE = [

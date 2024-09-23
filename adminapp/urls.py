@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from chatapp.views import chat_view
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -29,7 +30,10 @@ urlpatterns = [
     path('student_leave/update-status/<int:leave_id>/', views.student_update_leave_status, name='student_update_leave_status'),
     path('admin_student_feedback/', views.admin_student_feedback, name='admin_student_feedback'),
     path('admin_staff_feedback/', views.admin_staff_feedback, name='admin_staff_feedback'),
+    # fee management
+    path('add_fee/', views.add_fee, name='add_fee'),
     # chat
+    path('chat/<str:username>/', chat_view, name='chat_view'), 
    
     
     

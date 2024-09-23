@@ -15,6 +15,7 @@ from django.views.decorators.http import require_http_methods
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import imghdr
 from chatapp.models import Message
+from paymentapp.models import Payment,Fee
 
 # cache
 def clear_all_cache():
@@ -942,6 +943,46 @@ def admin_staff_feedback(request):
     }
     return render(request, "admin_templates/staff_feedback_template.html", context) 
 
+def add_fee(request):
+    if request.method == "POST":
+        student_id = request.POST.get('student_id')
+        payment_amount = request.POST.get('payment_amount')
+        payment_date = request.POST.get('payment_date')
+        payment_method = request.POST.get('payment_method')
+        payment_description = request.POST.get('payment_description')
 
+        try:
+            student = SchoolUser.objects.get(id=student_id, role='student')
+            fee = Fee.objects.get(student=student)
+
+            # Apply scholarship if applicable
+            fee.apply_scholarship(student)
+
+            # Create a new payment record
+            payment = Payment.objects.create(
+                fee=fee,
+                payment_id='PAYPAL_PAYMENT_ID',  # Replace with actual payment ID from PayPal
+                amount_paid=payment_amount,
+                is_successful=True  # Set based on actual payment status
+            )
+
+            # Update fee status
+            fee.is_paid = True
+            fee.save()
+
+            messages.success(request, "Payment added successfully.")
+            return redirect('add_fee')  # Adjust redirect as necessary
+
+        except SchoolUser.DoesNotExist:
+            messages.error(request, "Student does not exist.")
+        except Fee.DoesNotExist:
+            messages.error(request, "Fee record does not exist for this student.")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+
+    # Fetch all students for the dropdown
+    students = SchoolUser.objects.filter(role='student')
+    return render(request, "admin_templates/add_fee_template.html", {'students': students})
+ 
 
 

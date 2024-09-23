@@ -22,7 +22,7 @@ User = get_user_model()
 @login_required
 def chat_view(request, username):
     users = User.objects.exclude(id=request.user.id)
-    user_to_chat = get_object_or_404(User, username=username)
+    user_to_chat = get_object_or_404(User, username=username) 
     messages = Message.objects.filter(
         Q(sender=request.user, receiver=user_to_chat) |
         Q(sender=user_to_chat, receiver=request.user)
