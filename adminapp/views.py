@@ -14,7 +14,7 @@ from django.db.models import Q
 from django.views.decorators.http import require_http_methods
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import imghdr
-
+from chatapp.models import Message
 
 # cache
 def clear_all_cache():
@@ -940,4 +940,8 @@ def admin_staff_feedback(request):
     context = {
         'feedback_list': feedback_list,
     }
-    return render(request, "admin_templates/staff_feedback_template.html", context)
+    return render(request, "admin_templates/staff_feedback_template.html", context) 
+
+
+
+

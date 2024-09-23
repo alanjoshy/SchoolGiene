@@ -1,9 +1,0 @@
-<h2>Select User to Chat</h2>
-<ul>
-    {% for user in users %}
-    <li>
-        <a href="{% url 'chat_view' user.username %}">{{ user.username }}</a>
-    </li>
-    {% endfor %}
-</ul>
- 

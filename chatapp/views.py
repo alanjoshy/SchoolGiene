@@ -15,10 +15,9 @@ import time
 
 User = get_user_model()
 
-@login_required
-def user_list(request):
-    users = User.objects.exclude(id=request.user.id)
-    return render(request, 'user_list.html', {'users': users})
+
+
+
 
 @login_required
 def chat_view(request, username):

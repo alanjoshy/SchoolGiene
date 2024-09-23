@@ -29,5 +29,8 @@ urlpatterns = [
     path('student_leave/update-status/<int:leave_id>/', views.student_update_leave_status, name='student_update_leave_status'),
     path('admin_student_feedback/', views.admin_student_feedback, name='admin_student_feedback'),
     path('admin_staff_feedback/', views.admin_staff_feedback, name='admin_staff_feedback'),
+    # chat
+   
+    
     
 ]
