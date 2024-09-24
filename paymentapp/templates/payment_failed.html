@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Payment Failed</h2>
+        <p>There was an error processing your payment. Please try again later.</p>
+        <a href="{% url 'create_payment' payment.fee.id %}" class="btn btn-primary">Back to Payment</a>
+    </div>
+</body>
+</html>

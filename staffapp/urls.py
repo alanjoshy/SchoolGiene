@@ -8,12 +8,14 @@ urlpatterns = [
     path('staff_dashboard',views.staff_dashboard,name='staff_dashboard'),
     path('staff_logout', views.staff_logout, name='staff_logout'),
     path('take_attendance', views.take_attendance, name='take_attendance'),
-    path('view_attendance', views.view_attendance, name='view_attendance'),
+    path('view_student_attendance', views.view_student_attendance, name='view_student_attendance'),
     path('view_results', views.view_results, name='view_results'),
     path('add_result', views.add_result, name='add_result'),
     path('staff_apply_leave/', views.staff_apply_leave, name='staff_apply_leave'), 
     path('staff_feedback/', views.staff_feedback, name='staff_feedback'),
     path('chat/<str:username>/', chat_view, name='chat_view'), 
-   
+    path('forgot-password/', views.forgot_password_request, name='forgot_password_request'),
+    path('reset-password/<str:username>/', views.reset_password, name='reset_password'),
+    
      
 ]

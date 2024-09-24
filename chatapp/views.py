@@ -103,3 +103,11 @@ def fetch_messages(request, username):
     } for message in messages]
     
     return JsonResponse(message_list, safe=False)
+
+
+def some_view(request):
+    user_role = request.user.role  # Fetch user role
+    context = {
+        'user_role': user_role,
+    }
+    return render(request, 'your_template.html', context) 

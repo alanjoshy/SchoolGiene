@@ -1,0 +1,205 @@
+{% extends 'admin_templates/base_template.html' %}
+
+{% block page_title %}
+Manage Fees
+{% endblock page_title %}
+
+{% block main_content %}
+{% load static %}
+
+<section class="content">
+    <div class="container-fluid">
+
+        <a class="btn btn-primary" href="{% url 'create_fee' %}" role="button">+ Add Fee Record</a> <br />&nbsp;
+
+        {% if messages %}
+        <div class="form-group">
+            <div class="col-12">
+                {% for message in messages %}
+                {% if message.tags == "error" %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% elif message.tags == "success" %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-top: 10px;">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Fee Records</h3>
+
+                        <div class="card-tools">
+                            <!-- Search Form -->
+                            <form method="GET" action="{% url 'manage_fee' %}">
+                                <div class="input-group input-group-sm" style="width: 300px;">
+                                    <input type="text" name="search" class="form-control float-right"
+                                        placeholder="Search by student, amount or status" value="{{ search_query }}">
+
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-default">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                        <!-- Clear button -->
+                                        <a href="{% url 'manage_fee' %}" class="btn btn-secondary ml-2">
+                                            Clear
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Student</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Due Date</th>
+                                    <th>Description</th> <!-- New column for description -->
+                                    <th>Created At</th>
+                                    <th>Updated At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fee in fees %}
+                                <tr>
+                                    <td>{{ fee.id }}</td>
+                                    <td>{{ fee.student }}</td>
+                                    <td>{{ fee.amount }}</td>
+                                    <td>
+                                        <span
+                                            class="badge {% if fee.is_paid %}badge-success{% else %}badge-danger{% endif %}">
+                                            {% if fee.is_paid %}
+                                            Paid
+                                            {% else %}
+                                            Pending
+                                            {% endif %}
+                                        </span>
+                                    </td>
+
+
+                                    <td>{{ fee.due_date }}</td>
+                                    <td>{{ fee.description }}</td> <!-- Display description -->
+                                    <td>{{ fee.created_at }}</td>
+                                    <td>{{ fee.updated_at }}</td>
+                                    <td>
+                                        <button class="btn btn-success edit-fee-btn" data-id="{{ fee.id }}"
+                                            data-student="{{ fee.student.id }}" data-amount="{{ fee.amount }}"
+                                            data-due_date="{{ fee.due_date }}" data-description="{{ fee.description }}"                                           
+                                            data-toggle="modal"
+                                            data-target="#editFeeModal">
+                                            Edit
+                                        </button>
+
+                                        <form method="POST" action="{% url 'manage_fee' %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="delete_fee_id" value="{{ fee.id }}">
+                                            <button type="submit" class="btn btn-danger"
+                                                onclick="return confirm('Are you sure you want to delete this fee record?');">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+
+<!-- Edit Fee Modal -->
+<div class="modal fade" id="editFeeModal" tabindex="-1" role="dialog" aria-labelledby="editFeeModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'manage_fee' %}">
+                {% csrf_token %}
+                <input type="hidden" name="edit_fee_id" id="edit-fee-id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editFeeModalLabel">Edit Fee</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit-fee-amount">Amount</label>
+                        <input type="number" class="form-control" id="edit-fee-amount" name="fee_amount" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-fee-status">Status</label>
+                        <select class="form-control" id="edit-fee-status" name="fee_status" required>
+                            <option value="Paid">Paid</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-due-date">Due Date</label>
+                        <input type="date" class="form-control" id="edit-due-date" name="due_date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-fee-description">Description</label>
+                        <textarea class="form-control" id="edit-fee-description" name="description" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock main_content %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Edit button click event
+        document.querySelectorAll('.edit-fee-btn').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var feeId = this.getAttribute('data-id');
+                var studentId = this.getAttribute('data-student');
+                var amount = this.getAttribute('data-amount');
+                var status = this.getAttribute('data-status');
+                var dueDate = this.getAttribute('data-due_date');
+                var description = this.getAttribute('data-description');
+
+                // Populate the modal fields
+                document.getElementById('edit-fee-id').value = feeId;
+                document.getElementById('edit-fee-amount').value = amount;
+                document.getElementById('edit-fee-status').value = status;
+                document.getElementById('edit-due-date').value = dueDate;
+                document.getElementById('edit-fee-description').value = description;
+            });
+        });
+    });
+</script>
+{% endblock scripts %}

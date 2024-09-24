@@ -16,6 +16,9 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 import imghdr
 from chatapp.models import Message
 from paymentapp.models import Payment,Fee
+import datetime
+from django.db import transaction
+from decimal import Decimal
 
 # cache
 def clear_all_cache():
@@ -806,7 +809,7 @@ def view_attendance(request):
                 # If no attendance data is found, set an error message
                 if not attendance_data.exists():
                     error_message = "No attendance data found for the selected date range."
-
+    
     context = {
         'courses': courses,
         'subjects': subjects,
@@ -943,46 +946,89 @@ def admin_staff_feedback(request):
     }
     return render(request, "admin_templates/staff_feedback_template.html", context) 
 
-def add_fee(request):
+
+def create_fee(request):
     if request.method == "POST":
         student_id = request.POST.get('student_id')
-        payment_amount = request.POST.get('payment_amount')
-        payment_date = request.POST.get('payment_date')
-        payment_method = request.POST.get('payment_method')
-        payment_description = request.POST.get('payment_description')
+        fee_amount = request.POST.get('fee_amount')
+        due_date = request.POST.get('due_date')
+        description = request.POST.get('description')  # Fetch the description
 
         try:
+            # Fetch the student
             student = SchoolUser.objects.get(id=student_id, role='student')
-            fee = Fee.objects.get(student=student)
 
-            # Apply scholarship if applicable
-            fee.apply_scholarship(student)
+            # Convert fee amount to Decimal
+            fee_amount = Decimal(fee_amount)
 
-            # Create a new payment record
-            payment = Payment.objects.create(
-                fee=fee,
-                payment_id='PAYPAL_PAYMENT_ID',  # Replace with actual payment ID from PayPal
-                amount_paid=payment_amount,
-                is_successful=True  # Set based on actual payment status
+            # Parse the due date, default to 30 days from now if not provided
+            if due_date:
+                due_date = timezone.datetime.strptime(due_date, "%Y-%m-%d").date()
+            else:
+                due_date = timezone.now().date() + timezone.timedelta(days=30)
+
+            # Create a fee for the student
+            Fee.objects.create(
+                student=student,
+                amount=fee_amount,
+                due_date=due_date,
+                is_paid=False,
+                description=description  # Save the description
             )
 
-            # Update fee status
-            fee.is_paid = True
-            fee.save()
-
-            messages.success(request, "Payment added successfully.")
-            return redirect('add_fee')  # Adjust redirect as necessary
+            messages.success(request, "Fee created successfully.")
+            return redirect('create_fee')
 
         except SchoolUser.DoesNotExist:
             messages.error(request, "Student does not exist.")
-        except Fee.DoesNotExist:
-            messages.error(request, "Fee record does not exist for this student.")
+        except ValueError:
+            messages.error(request, "Invalid fee amount.")
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
 
     # Fetch all students for the dropdown
     students = SchoolUser.objects.filter(role='student')
-    return render(request, "admin_templates/add_fee_template.html", {'students': students})
- 
+    return render(request, "admin_templates/create_fee_template.html", {'students': students})
+
+
+
+def manage_fee(request):
+    if request.method == "POST":
+        if 'delete_fee_id' in request.POST:
+            fee_id = request.POST.get('delete_fee_id')
+            Fee.objects.filter(id=fee_id).delete()
+            messages.success(request, "Fee record deleted successfully!")
+            return redirect('manage_fee')
+        else:
+            # Handle editing fee record
+            fee_id = request.POST.get('edit_fee_id')
+            amount = request.POST.get('fee_amount')
+            due_date = request.POST.get('due_date')
+            is_paid = request.POST.get('fee_status') == 'True'  # Convert string to boolean
+
+            fee = Fee.objects.get(id=fee_id)
+            fee.amount = amount
+            fee.is_paid = is_paid
+            fee.due_date = due_date
+            fee.save()
+            messages.success(request, "Fee record updated successfully!")
+            return redirect('manage_fee')
+
+    # Handle search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        fees = Fee.objects.filter(
+            student__first_name__icontains=search_query
+        ) | Fee.objects.filter(
+            student__last_name__icontains=search_query
+        ) | Fee.objects.filter(amount__icontains=search_query)
+    else:
+        fees = Fee.objects.all()
+
+    context = {
+        'fees': fees,
+        'search_query': search_query,
+    }
+    return render(request, 'admin_templates/fee_management_template.html', context)
 
 

@@ -36,7 +36,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
-        sender = event['sender']
+        sender = event['sender'] 
         message = event['content']
 
         # Send message to WebSocket

@@ -31,7 +31,8 @@ urlpatterns = [
     path('admin_student_feedback/', views.admin_student_feedback, name='admin_student_feedback'),
     path('admin_staff_feedback/', views.admin_staff_feedback, name='admin_staff_feedback'),
     # fee management
-    path('add_fee/', views.add_fee, name='add_fee'),
+    path('create_fee/', views.create_fee, name='create_fee'),
+    path('manage_fee/', views.manage_fee, name='manage_fee'), 
     # chat
     path('chat/<str:username>/', chat_view, name='chat_view'), 
    

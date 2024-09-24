@@ -256,11 +256,17 @@
     
        <!-- chat -->
        <li class="nav-item">
-        <a href="" class="nav-link {% if request.path == '/' %} active {% endif %}">
+        <a href="{% url 'create_fee'  %}" class="nav-link {% if request.path == '/' %} active {% endif %}">
             <i class="nav-icon fas fa-cash-register"></i>
-            <p>{% trans 'add_fee' %}</p>
+            <p>{% trans 'add Payment' %}</p>
         </a>
-    </li>
+    </li> 
+    <li class="nav-item">
+      <a href="{% url 'manage_fee'  %}" class="nav-link {% if request.path == '/' %} active {% endif %}">
+          <i class="nav-icon fas fa-cash-register"></i>
+          <p>{% trans 'Manage Fee' %}</p>
+      </a>
+  </li> 
       
         
 

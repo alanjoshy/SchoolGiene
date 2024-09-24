@@ -89,6 +89,16 @@
                   {% comment %} <span class="right badge badge-danger">New</span> {% endcomment %}
                 </p>
               </a>
+            </li> 
+            <li class="nav-item"></li>
+             
+              <a href="{% url 'fee_section'  %}" class="nav-link {% if request.path == staff_feedback %} active {% endif %}"> 
+                <i class="nav-icon fas fa-comments"></i>
+                <p>
+                  Fee Management
+                  {% comment %} <span class="right badge badge-danger">New</span> {% endcomment %}
+                </p>
+              </a>
             </li>
           </ul>
         </nav>

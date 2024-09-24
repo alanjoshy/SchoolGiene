@@ -13,6 +13,7 @@ from django.contrib.auth.hashers import make_password
 from adminapp.views import home
 from django.utils import timezone
 from django.db.models import Sum
+from paymentapp.models import Fee,Payment
 
 
 # student login
@@ -411,4 +412,64 @@ def student_profile_update(request):
 
         messages.success(request, "Student details updated successfully.")
         return redirect('admin_dashboard') 
-    return render(request,'student_profile.html')
+    return render(request,'student_profile.html') 
+
+
+def fee_section(request):
+    if request.user.is_authenticated:  
+        student_id = request.user.id  
+        fees = Fee.objects.filter(student__id=student_id)
+
+        context = {
+            'fees': fees,
+        }
+
+        return render(request, 'fee_view_template.html', context) 
+    else:
+       
+        return redirect('login') 
+    
+    
+# password reseting
+def forgot_password_request(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        
+        try:
+            # Check if the user with the provided username exists
+            user = SchoolUser.objects.get(username=username)
+            
+            # Redirect to password reset form with the username
+            return redirect('reset_password', username=username)
+
+        except SchoolUser.DoesNotExist:
+            messages.error(request, 'Invalid username. Please try again.')
+
+    return render(request, 'forgot_password_request.html')  
+
+
+def reset_password(request, username):
+    try:
+        # Get the user with the provided username
+        user = SchoolUser.objects.get(username=username)
+
+        if request.method == 'POST':
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+
+            if new_password == confirm_password:
+                # Set the new password
+                user.set_password(new_password)
+                user.save()
+
+                messages.success(request, 'Password reset successful. You can now log in.')
+                return redirect('student_login')
+
+            else:
+                messages.error(request, 'Passwords do not match.')
+
+        return render(request, 'reset_password.html', {'username': username})
+
+    except SchoolUser.DoesNotExist:
+        messages.error(request, 'User does not exist.')
+        return redirect('forgot_password_request') 

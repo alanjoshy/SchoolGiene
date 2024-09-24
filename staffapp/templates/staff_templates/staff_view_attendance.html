@@ -1,0 +1,96 @@
+{% extends 'staff_templates/base_template.html' %}
+
+{% block page_title %}
+    View Attendance
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">View Attendance</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Form for Course, Subject, and Date Selection -->
+                        <form method="POST">
+                            {% csrf_token %}
+                            
+                            <!-- Course Selection -->
+                            <div class="form-group">
+                                <label>Course</label>
+                                <select class="form-control" name="course" onchange="this.form.submit()">
+                                    <option value="">Select Course</option>
+                                    {% for course in courses %}
+                                        <option value="{{ course.id }}" {% if selected_course_id == course.id %}selected{% endif %}>
+                                            {{ course.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Subject Selection (Populated based on selected course) -->
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <select class="form-control" name="subject" {% if not subjects %}disabled{% endif %}>
+                                    <option value="">Select Subject</option>
+                                    {% for subject in subjects %}
+                                        <option value="{{ subject.id }}" {% if selected_subject_id == subject.id %}selected{% endif %}>
+                                            {{ subject.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Date Range Selection -->
+                            <div class="form-group">
+                                <label>Select Start Date</label>
+                                <input type="date" class="form-control" name="start_date" value="{{ start_date }}">
+                            </div>
+                            <div class="form-group">
+                                <label>Select End Date</label>
+                                <input type="date" class="form-control" name="end_date" value="{{ end_date }}">
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="card-footer">
+                                <button type="submit" class="btn btn-primary">Fetch Attendance</button>
+                            </div>
+
+                            <!-- Error and Success Messages -->
+                            {% if error_message %}
+                                <div class="alert alert-danger">{{ error_message }}</div>
+                            {% endif %}
+                        </form>
+
+                        <!-- Student Attendance Table -->
+                        {% if attendance_data %}
+                            <div class="card-footer">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Student Name</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for attendance in attendance_data %}
+                                            <tr>
+                                                <td>{{ attendance.student_name }}</td>
+                                                <td>{{ attendance.status|yesno:"Present,Absent" }}</td>
+                                                <td>{{ attendance.date }}</td> 
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %}

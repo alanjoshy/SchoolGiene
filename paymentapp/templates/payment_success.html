@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Success</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Payment Successful!</h2>
+        <p>Thank you for your payment of ${{ payment.amount_paid }}.</p>
+        <p>Your payment ID is: <strong>{{ payment.payment_id }}</strong></p>
+        <a href="{% url 'fee_section'  %}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</body>
+</html>

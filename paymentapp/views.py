@@ -30,17 +30,17 @@ def create_payment(request, fee_id):
                     "items": [{
                         "name": f"Fee Payment for {fee.student.username}",
                         "sku": "fee_payment",
-                        "price": str(fee.final_amount),
+                        "price": str(fee.amount),  # Use the amount field
                         "currency": "USD",
                         "quantity": 1}]},
                 "amount": {
-                    "total": str(fee.final_amount),
+                    "total": str(fee.amount),  # Use the amount field
                     "currency": "USD"},
                 "description": "Payment for student fee"}]})
 
         if payment.create():
-            # Save the payment ID in the Payment model
-            payment_record = Payment.objects.create(fee=fee, payment_id=payment.id, amount_paid=fee.final_amount)
+            # Save the payment ID in the Payment model using the amount field
+            payment_record = Payment.objects.create(fee=fee, payment_id=payment.id, amount_paid=fee.amount)  # Use the amount field
             payment_record.save()
 
             # Redirect to the PayPal approval page
@@ -51,6 +51,7 @@ def create_payment(request, fee_id):
             return JsonResponse({"error": "Error while creating PayPal payment"})
 
     return render(request, 'payment_form.html', {'fee': fee})
+
 
 
 # views.py

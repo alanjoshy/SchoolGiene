@@ -12,6 +12,10 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.utils.timezone import now
+from django.core.mail import send_mail
+from django.urls import reverse
+import random
+import string
 
 
 # cache
@@ -231,16 +235,105 @@ def take_attendance(request):
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
-def view_attendance(request):
-    # subjects = Subject.objects.filter(staff_assigned=request.user)
-    return render(request,"staff_templates/update_attendance_template.html")
+def view_student_attendance(request):
+    # Fetch all courses and initialize variables
+    courses = Course.objects.all()
+    subjects = []
+    attendance_data = []
+    selected_course_id = None
+    selected_subject_id = None
+    start_date = None
+    end_date = None
+    error_message = None
+
+    # Get the logged-in staff user
+    staff_user = request.user  # Assuming the user is authenticated and is a staff member
+
+    if request.method == "POST":
+        # Get form data
+        selected_course_id = request.POST.get('course')
+        selected_subject_id = request.POST.get('subject')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+
+        # Check if end_date is in the future
+        if end_date and timezone.now().date() < timezone.datetime.strptime(end_date, '%Y-%m-%d').date():
+            error_message = "Future dates cannot be selected."
+        else:
+            # Fetch subjects related to the selected course that are assigned to the staff
+            if selected_course_id:
+                subjects = Subject.objects.filter(course_id=selected_course_id, staff_assigned=staff_user)
+
+            # If subject, start date, and end date are provided, fetch the attendance data
+            if selected_subject_id and start_date and end_date:
+                attendance_data = Attendance.objects.filter(
+                    subject_id=selected_subject_id,
+                    date__range=[start_date, end_date],
+                    subject__staff_assigned=staff_user  # Ensure the subject is assigned to the staff
+                ).select_related('student', 'subject')
+
+                # If no attendance data is found, set an error message
+                if not attendance_data.exists():
+                    error_message = "No attendance data found for the selected date range."
+
+    # Prepare attendance data for rendering
+    attendance_records = []
+    for attendance in attendance_data:
+        # Fetch student name and attendance status
+        student_name = attendance.student.first_name if attendance.student else "Unknown Student"
+        attendance_records.append({
+            'student_name': student_name,
+            'status': "Present" if attendance.status else "Absent",  # Convert boolean to string
+            'date': attendance.date,
+        })
+
+    context = {
+        'courses': courses,
+        'subjects': subjects,
+        'selected_course_id': selected_course_id,
+        'selected_subject_id': selected_subject_id,
+        'start_date': start_date,
+        'end_date': end_date,
+        'attendance_data': attendance_records,
+        'error_message': error_message,
+    }
+
+    # Render the template with the context
+    return render(request, "staff_templates/staff_view_attendance.html", context)
+
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def view_results(request):
+    subjects = Subject.objects.filter(staff_assigned=request.user)
+    results = []
+
+    if request.method == "POST":
+        subject_id = request.POST.get("subject")
+
+        if subject_id:
+            selected_subject = get_object_or_404(Subject, id=subject_id, staff_assigned=request.user)
+            # Fetch exams for the selected subject
+            exams = Exam.objects.filter(subject=selected_subject)
+
+            # Fetch exam results for each exam and their enrolled students
+            for exam in exams:
+                exam_results = ExamResult.objects.filter(exam=exam).select_related('student')
+                for result in exam_results:
+                    results.append({
+                        'student': result.student,
+                        'exam': exam,
+                        'assignment_marks': result.assignment_marks,
+                        'marks_obtained': result.marks_obtained,
+                        'max_marks': result.max_marks,
+                    })
+
     return render(
         request,
-        "staff_templates/add_result_template.html",
+        "staff_templates/view_exam_results_template.html",{
+            "subjects": subjects,
+            "results": results,
+        },
     )
 
 
@@ -399,3 +492,46 @@ def staff_feedback(request):
     }
     
     return render(request, 'staff_templates/staff_feedback_template.html', context) 
+
+def forgot_password_request(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        
+        try:
+            # Check if the user with the provided username exists
+            user = SchoolUser.objects.get(username=username)
+            
+            # Redirect to password reset form with the username
+            return redirect('reset_password', username=username)
+
+        except SchoolUser.DoesNotExist:
+            messages.error(request, 'Invalid username. Please try again.')
+
+    return render(request, 'staff_templates/forgot_password_request.html') 
+
+
+def reset_password(request, username):
+    try:
+        # Get the user with the provided username
+        user = SchoolUser.objects.get(username=username)
+
+        if request.method == 'POST':
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+
+            if new_password == confirm_password:
+                # Set the new password
+                user.set_password(new_password)
+                user.save()
+
+                messages.success(request, 'Password reset successful. You can now log in.')
+                return redirect('staff_login')
+
+            else:
+                messages.error(request, 'Passwords do not match.')
+
+        return render(request, 'staff_templates/reset_password.html', {'username': username})
+
+    except SchoolUser.DoesNotExist:
+        messages.error(request, 'User does not exist.')
+        return redirect('forgot_password_request') 

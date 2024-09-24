@@ -48,16 +48,16 @@
               </a>
             </li>
 
-            <!-- <li class="nav-item">
+            <li class="nav-item">
               
-              <a href=" {% url 'view_attendance' %}" class="nav-link ">
+              <a href=" {% url 'view_student_attendance' %}" class="nav-link ">
                 <i class="nav-icon fas fa-calendar-alt"></i>
                 <p>
-                  View Update Attendance
+                  View  Attendance
                   {% comment %} <span class="right badge badge-danger">New</span> {% endcomment %}
                 </p>
               </a>
-            </li> -->
+            </li>
 
             <li class="nav-item">
               
@@ -65,6 +65,16 @@
                 <i class="nav-icon fas fa-tasks"></i>
                 <p>
                   Add Result
+                  {% comment %} <span class="right badge badge-danger">New</span> {% endcomment %}
+                </p>
+              </a>
+            </li>
+            <li class="nav-item">
+              
+              <a href=" {% url 'view_results' %}" class="nav-link "> 
+                <i class="nav-icon fas fa-calendar-alt"></i>
+                <p>
+                  View Results
                   {% comment %} <span class="right badge badge-danger">New</span> {% endcomment %}
                 </p>
               </a>
