@@ -426,7 +426,6 @@ def fee_section(request):
 
         return render(request, 'fee_view_template.html', context) 
     else:
-       
         return redirect('login') 
     
     

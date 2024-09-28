@@ -279,7 +279,7 @@ def view_student_attendance(request):
     # Prepare attendance data for rendering
     attendance_records = []
     for attendance in attendance_data:
-        # Fetch student name and attendance status
+        # Fetch student name and attendance 
         student_name = attendance.student.first_name if attendance.student else "Unknown Student"
         attendance_records.append({
             'student_name': student_name,

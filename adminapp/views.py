@@ -691,7 +691,7 @@ def manage_session(request):
         }
     )
 
-# add exam
+# add exam 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required
 def add_exam(request):
@@ -725,6 +725,50 @@ def add_exam(request):
         "admin_templates/add_exam_template.html",
         {"sessions": sessions, "courses": courses, "subjects": subjects},
     )
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@login_required
+def admin_view_results(request):
+    courses = Course.objects.all()  # Fetch all courses
+    subjects = []
+    results = []
+    
+    if request.method == "POST":
+        course_id = request.POST.get("course")
+        subject_id = request.POST.get("subject")
+
+        if course_id:
+            # Fetch subjects related to the selected course
+            selected_course = get_object_or_404(Course, id=course_id)
+            subjects = Subject.objects.filter(course=selected_course)
+
+            if subject_id:
+                selected_subject = get_object_or_404(Subject, id=subject_id, course=selected_course)
+                # Fetch exams for the selected subject
+                exams = Exam.objects.filter(subject=selected_subject)
+
+                # Fetch exam results for each exam and their enrolled students
+                for exam in exams:
+                    exam_results = ExamResult.objects.filter(exam=exam).select_related('student')
+                    for result in exam_results:
+                        results.append({
+                            'student': result.student,
+                            'exam': exam,
+                            'assignment_marks': result.assignment_marks,
+                            'marks_obtained': result.marks_obtained,
+                            'max_marks': result.max_marks,
+                        })
+
+    return render(
+        request,
+        "admin_templates/admin_view_exam_results_template.html",
+        {
+            "courses": courses,
+            "subjects": subjects,
+            "results": results,
+        },
+    )
+
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required

@@ -98,13 +98,23 @@
               <p>{% trans 'Manage Student' %}</p>
             </a>
           </li>
+          <!-- register student -->
           <li class="nav-item">
             <a href="{% url 'register_student' %}"
               class="nav-link {% if request.path == '/register_student/' %} active {% endif %}">
               <i class="nav-icon fas fa-user-plus"></i>
               <p>{% trans 'Add Student' %}</p>
             </a>
-          </li>
+          </li> 
+          <!-- view results -->
+          <li class="nav-item">
+            <a href="{% url 'admin_view_results' %}"
+              class="nav-link {% if request.path == '/admin_view_results/' %} active {% endif %}">
+              <i class="nav-icon fas fa-user-plus"></i>
+              <p>{% trans 'view Results' %}</p>
+            </a>
+          </li> 
+          <!-- view attendance -->
           <li class="nav-item">
             <a href="{% url 'view_attendance' %}"
               class="nav-link {% if request.path == '/view_attendance/' %} active {% endif %}">

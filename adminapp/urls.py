@@ -21,6 +21,7 @@ urlpatterns = [
     path("manage_session/", views.manage_session, name="manage_session"),
     path("add_exam/", views.add_exam, name="add_exam"),
     path("manage_exam/", views.manage_exam, name="manage_exam"),
+    path("admin_view_results/", views.admin_view_results, name="admin_view_results"), 
     path("view_attendance/", views.view_attendance, name="view_attendance"),
     path("student_view_leave/", views.student_view_leave, name="student_view_leave"),
     # admin staff urls
