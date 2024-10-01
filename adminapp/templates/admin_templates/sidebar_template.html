@@ -240,13 +240,13 @@
         <ul id="advanced-menu" class="nav nav-treeview collapse">
 
           <li class="nav-item">
-            <a href="#" class="nav-link {% if request.path == '/add_exam/' %} active {% endif %}">
+            <a href="{% url 'create_fee'  %}" class="nav-link {% if request.path == '/add_exam/' %} active {% endif %}">
               <i class="nav-icon fas fa-calendar-plus"></i>
               <p>{% trans 'Add Fees' %}</p>
             </a>
           </li>
           <li class="nav-item">
-            <a href="#" class="nav-link {% if request.path == '/manage_exam/' %} active {% endif %}">
+            <a href="{% url 'manage_fee'  %}" class="nav-link {% if request.path == '/manage_exam/' %} active {% endif %}">
               <i class="nav-icon fas fa-calendar-check"></i>
               <p>{% trans 'Manage Fee' %}</p>
             </a>
@@ -264,19 +264,7 @@
     
     
     
-       <!-- chat -->
-       <li class="nav-item">
-        <a href="{% url 'create_fee'  %}" class="nav-link {% if request.path == '/' %} active {% endif %}">
-            <i class="nav-icon fas fa-cash-register"></i>
-            <p>{% trans 'add Payment' %}</p>
-        </a>
-    </li> 
-    <li class="nav-item">
-      <a href="{% url 'manage_fee'  %}" class="nav-link {% if request.path == '/' %} active {% endif %}">
-          <i class="nav-icon fas fa-cash-register"></i>
-          <p>{% trans 'Manage Fee' %}</p>
-      </a>
-  </li> 
+     
       
         
 

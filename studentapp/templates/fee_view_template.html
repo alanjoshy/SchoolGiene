@@ -33,34 +33,37 @@
                             </thead>
                             <tbody>
                                 {% for fee in fees %}
-                                    <tr>
-                                        <td>{{ fee.id }}</td>
-                                        <td>{{ fee.description }}</td>
-                                        <td>{{ fee.amount }}</td>
-                                        <td>{{ fee.due_date }}</td>
-                                        <td>
-                                            {% if fee.is_paid %}
-                                                <span class="badge badge-success">Paid</span>
+                                <tr>
+                                    <td>{{ fee.id }}</td>
+                                    <td>{{ fee.description }}</td>
+                                    <td>{{ fee.amount }}</td>
+                                    <td>{{ fee.due_date }}</td>
+                                    <td>
+                                        {% if fee.is_paid %}
+                                            <span class="badge badge-success">Paid</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ fee.created_at }}</td>
+                                    <td>{{ fee.updated_at }}</td>
+                                    <td>
+                                        {% if not fee.is_paid %}
+                                            <a href="{% url 'create_payment' fee.id %}" class="btn btn-primary">Pay Now</a>
+                                        {% else %}
+                                            {% if fee.payment and fee.payment.payment_id %}
+                                                <a href="{% url 'download_invoice' fee.payment.payment_id %}" class="btn btn-secondary">Download Invoice</a>
                                             {% else %}
-                                                <span class="badge badge-danger">Pending</span>
+                                                <span class="text-muted">Invoice Unavailable</span>
                                             {% endif %}
-                                        </td>
-                                        <td>{{ fee.created_at }}</td>
-                                        <td>{{ fee.updated_at }}</td>
-                                        <td>
-                                            {% if not fee.is_paid %}
-                                                <a href="{% url 'create_payment' fee.id %}" class="btn btn-primary">Pay Now</a>
-                                            {% endif %}
-                                            {% if fee.invoice %}  {# Check if invoice exists #}
-                                                <a href="{{ fee.invoice.url }}" class="btn btn-secondary">Download Invoice</a>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="8" class="text-center">No fees available.</td> 
-                                    </tr>
-                                {% endfor %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No fees available.</td>
+                                </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>

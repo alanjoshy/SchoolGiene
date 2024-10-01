@@ -2,7 +2,7 @@
 import paypalrestsdk
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import FileResponse, JsonResponse
 from .models import Fee, Payment
 from django.urls import reverse
 from paypal.standard.forms import PayPalPaymentsForm  
@@ -68,37 +68,62 @@ def create_payment(request, fee_id):
 
     return render(request, 'payment_form.html', {'fee': fee})
 
-
-
-# views.py
 def payment_success(request):
     payment_id = request.GET.get('paymentId')
     payer_id = request.GET.get('PayerID')
 
     try:
-        # Retrieve the PayPal payment object using PayPal SDK
         payment = paypalrestsdk.Payment.find(payment_id)
         
-        # Execute the payment if it exists and is valid
         if payment.execute({"payer_id": payer_id}):
-            # Mark the payment as successful in your database
             payment_record = Payment.objects.get(payment_id=payment_id)
             payment_record.is_successful = True
             payment_record.save()
 
-            # Mark the fee as paid
             fee = payment_record.fee
             fee.is_paid = True
             fee.save()
+
+            # Generate and save the invoice immediately after successful payment
+            download_invoice(request, payment_id)
 
             return render(request, 'payment_success.html', {'payment': payment_record})
         else:
             return redirect(reverse('payment_cancel'))
 
     except paypalrestsdk.ResourceNotFound as e:
-        # Handle the error if the payment ID isn't found in PayPal
         print(f"Payment not found: {str(e)}")
         return redirect(reverse('payment_cancel'))
+
+# views.py
+# def payment_success(request):
+#     payment_id = request.GET.get('paymentId')
+#     payer_id = request.GET.get('PayerID')
+
+#     try:
+#         # Retrieve the PayPal payment object using PayPal SDK
+#         payment = paypalrestsdk.Payment.find(payment_id)
+        
+#         # Execute the payment if it exists and is valid
+#         if payment.execute({"payer_id": payer_id}):
+#             # Mark the payment as successful in your database
+#             payment_record = Payment.objects.get(payment_id=payment_id)
+#             payment_record.is_successful = True
+#             payment_record.save()
+
+#             # Mark the fee as paid
+#             fee = payment_record.fee
+#             fee.is_paid = True
+#             fee.save()
+
+#             return render(request, 'payment_success.html', {'payment': payment_record})
+#         else:
+#             return redirect(reverse('payment_cancel'))
+
+#     except paypalrestsdk.ResourceNotFound as e:
+#         # Handle the error if the payment ID isn't found in PayPal
+#         print(f"Payment not found: {str(e)}")
+#         return redirect(reverse('payment_cancel'))
 
 
 def payment_cancel(request):
@@ -162,7 +187,12 @@ def generate_invoice(payment):
 def download_invoice(request, payment_id):
     payment = get_object_or_404(Payment, payment_id=payment_id)
     
-    # Generate the invoice
+    # Check if the invoice already exists
+    if payment.invoice:
+        # If it exists, serve the existing file
+        return FileResponse(open(payment.invoice.path, 'rb'), as_attachment=True, filename=f"invoice_{payment.payment_id}.pdf")
+    
+    # If the invoice doesn't exist, generate it
     pdf_buffer = generate_invoice(payment)
     
     # Save the invoice to the file system
@@ -179,8 +209,5 @@ def download_invoice(request, payment_id):
     payment.invoice = f'invoices/{invoice_filename}'
     payment.save()
 
-    # Return the invoice as a response if the user wants to download it immediately
-    response = HttpResponse(pdf_buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{invoice_filename}"'
-    
-    return response
+    # Return the invoice as a response
+    return FileResponse(open(invoice_path, 'rb'), as_attachment=True, filename=invoice_filename)

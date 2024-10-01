@@ -7,5 +7,5 @@ urlpatterns = [
     path('payment/cancel/', views.payment_cancel, name='payment_cancel'),
     path('fee_section/', fee_section, name='fee_section'),
     path('invoice/<str:payment_id>/', views.download_invoice, name='download_invoice'),
-    
+    path('download_invoice/<str:payment_id>/', views.download_invoice, name='download_invoice'),
 ]
