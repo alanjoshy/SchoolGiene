@@ -12,6 +12,8 @@ from django.core.cache import cache
 from django.utils.dateparse import parse_datetime
 from datetime import datetime, time
 import time
+from django.db.models import Q, Max, Subquery, OuterRef
+from django.db import transaction
 
 User = get_user_model()
 
@@ -20,47 +22,80 @@ User = get_user_model()
 
 
 @login_required
-def chat_view(request, username):
-    users = User.objects.exclude(id=request.user.id)
-    user_to_chat = get_object_or_404(User, username=username) 
-    messages = Message.objects.filter(
-        Q(sender=request.user, receiver=user_to_chat) |
-        Q(sender=user_to_chat, receiver=request.user)
-    ).order_by('timestamp')
-    
-    return render(request, 'chat.html', {
-        'user_to_chat': user_to_chat,
-        'messages': messages,
-        'users': users
-    })
+def chat_view(request, username=None):
+    current_user = request.user
+    users = User.objects.exclude(id=current_user.id)
+
+    # Get the last message for each conversation
+    last_messages = Message.objects.filter(
+        Q(sender=current_user, receiver=OuterRef('pk')) |
+        Q(sender=OuterRef('pk'), receiver=current_user)
+    ).order_by('-timestamp')
+
+    users = users.annotate(
+        last_message_content=Subquery(last_messages.values('content')[:1]),
+        last_message_timestamp=Subquery(last_messages.values('timestamp')[:1])
+    ).order_by('-last_message_timestamp')
+
+    context = {
+        'users': users,
+    }
+
+    if username:
+        user_to_chat = get_object_or_404(User, username=username)
+        messages = Message.objects.filter(
+            Q(sender=current_user, receiver=user_to_chat) |
+            Q(sender=user_to_chat, receiver=current_user)
+        ).order_by('timestamp')
+        
+        context.update({
+            'user_to_chat': user_to_chat,
+            'messages': messages,
+        })
+
+    return render(request, 'chat.html', context)
 
 @login_required
 @csrf_exempt
 def send_message(request, receiver_username):
     try:
-        data = json.loads(request.body)
-        content = data.get('content')
-        receiver = SchoolUser.objects.get(username=receiver_username)
-        sender = request.user
-        
-        if content:
-            # Create and save the message
-            message = Message.objects.create(sender=sender, receiver=receiver, content=content)
+        with transaction.atomic():
+            data = json.loads(request.body)
+            content = data.get('content')
+            
+            if not content or not content.strip():
+                return JsonResponse({'error': 'Message content is empty'}, status=400)
+            
+            try:
+                receiver = SchoolUser.objects.get(username=receiver_username)
+            except SchoolUser.DoesNotExist:
+                return JsonResponse({'error': 'Receiver not found'}, status=404)
+            
+            sender = request.user
+            
+            message = Message.objects.create(
+                sender=sender,
+                receiver=receiver,
+                content=content,
+                status='SENT'
+            )
+            
             return JsonResponse({
                 'status': 'success',
                 'message': {
+                    'id': message.id,
                     'content': message.content,
                     'sender': sender.username,
+                    'receiver': receiver.username,
                     'timestamp': message.timestamp.isoformat(),
+                    'status': message.status,
                 }
             })
-        else:
-            return JsonResponse({'error': 'Message content is empty'}, status=400)
     
-    except SchoolUser.DoesNotExist:
-        return JsonResponse({'error': 'Receiver not found'}, status=404)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
 def fetch_messages(request, username):

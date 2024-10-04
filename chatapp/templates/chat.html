@@ -1,227 +1,291 @@
-
-    {% extends 'admin_templates/base_template.html' %}
-
-
-
-
-{% block page_title %}Chat{% endblock page_title %}
-
-{% block main_content %}
-<section class="content">
-    <div class="container-fluid">
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="user-list d-flex flex-row flex-wrap mb-3">
-                    {% for user in users %}
-                        <div class="user-avatar mr-3 mb-3" style="cursor: pointer;" onclick="loadChat('{{ user.username }}')">
-                            <div class="avatar-circle" style="background-color: {{ user.color|default:'#007bff' }};">
-                                {{ user.username|slice:":1"|upper }}
-                            </div>
-                            <div class="text-center mt-1">{{ user.username }}</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Chat</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100%;
+            background-color: #f0f2f5;
+        }
+        .container {
+            display: flex;
+            height: 100%;
+        }
+        .sidebar {
+            width: 30%;
+            background-color: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+        }
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background-color: #f0f2f5;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #e5ddd5;
+        }
+        .chat-input {
+            background-color: #f0f2f5;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .user-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .user-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f2f5;
+            cursor: pointer;
+        }
+        .user-item:hover {
+            background-color: #f5f5f5;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ddd;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+        .message {
+            max-width: 60%;
+            padding: 8px 12px;
+            border-radius: 7.5px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .message-sent {
+            background-color: #dcf8c6;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .message-received {
+            background-color: #ffffff;
+        }
+        #message-input {
+            flex: 1;
+            border: none;
+            border-radius: 21px;
+            padding: 10px 15px;
+            margin: 0 10px;
+        }
+        #send-button {
+            background-color: #128C7E;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
+        .user-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f2f5;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+        .user-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .last-message {
+            font-size: 0.8em;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .message-time {
+            font-size: 0.7em;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <ul class="user-list" id="user-list">
+                {% for user in users %}
+                    <li class="user-item" onclick="loadChat('{{ user.username }}')">
+                        <div class="avatar" style="background-color: {{ user.color|default:'#128C7E' }};">
+                            {{ user.username|slice:":1"|upper }}
                         </div>
-                    {% endfor %}
-                </div>
-            </div> 
-        </div>
-        
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h3 class="card-title m-0" id="chat-with">Select a user to start chatting</h3>
-                    </div>
-                    <div class="card-body chat-box" id="chat-box">
-                        <!-- Messages will be appended here -->
-                    </div>
-                    <div class="card-footer">
-                        <form id="chat-form">
-                            {% csrf_token %}
-                            <div class="input-group">
-                                <textarea name="content" id="message-input" class="form-control" placeholder="Type a message" rows="2"></textarea>
-                                <div class="input-group-append">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane"></i> Send
-                                    </button>
-                                </div>
+                        <div class="user-info">
+                            <div class="user-name">{{ user.username }}</div>
+                            {% if user.last_message_content %}
+                                <div class="last-message">{{ user.last_message_content|truncatechars:30 }}</div>
+                            {% endif %}
+                        </div>
+                        {% if user.last_message_timestamp %}
+                            <div class="message-time">
+                                {{ user.last_message_timestamp|date:"H:i" }}
                             </div>
-                        </form>
-                    </div>
-                </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="avatar" id="chat-avatar"></div>
+                <h3 id="chat-with">Select a user to start chatting</h3>
+            </div>
+            <div class="chat-messages" id="chat-box"></div>
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="Type a message" />
+                <button id="send-button"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
-</section>
 
-<style>
-    .user-avatar {
-        text-align: center;
-        transition: transform 0.2s;
-    }
-    .user-avatar:hover {
-        transform: scale(1.05);
-    }
-    .avatar-circle {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 24px;
-        font-weight: bold;
-    }
-    .chat-box {
-        height: 400px;
-        overflow-y: auto;
-        padding: 15px;
-        background-color: #f8f9fa;
-    }
-    .message {
-        margin-bottom: 15px;
-        padding: 10px;
-        border-radius: 15px;
-        max-width: 70%;
-    }
-    .message-sent {
-        background-color: #007bff;
-        color: white;
-        align-self: flex-end;
-        margin-left: auto;
-    }
-    .message-received {
-        background-color: #e9ecef;
-        color: #333;
-    }
-    #message-input {
-        resize: none;
-    }
-</style>
-
-<script>
-    let currentReceiver = null;
-    let lastMessageTimestamp = null;
-    let fetchTimeout = null;
-    let lastFetchTime = 0;
-    const DEBOUNCE_DELAY = 100; // 1 second debounce delay
-    const MIN_FETCH_INTERVAL = 5000; // Minimum 5 seconds between fetches
-    
-    function loadChat(username) {
-        currentReceiver = username;
-        document.getElementById('chat-with').textContent = username;
-        document.getElementById('chat-box').innerHTML = '';
-        lastMessageTimestamp = null;
+    <script>
+        let currentReceiver = null;
+        let lastMessageTimestamp = null;
+        let fetchTimeout = null;
+        let lastFetchTime = 0;
+        const DEBOUNCE_DELAY = 1000;
+        const MIN_FETCH_INTERVAL = 5000;
         
-        // Clear existing timeout
-        if (fetchTimeout) {
-            clearTimeout(fetchTimeout);
-        }
-    
-        // Fetch initial messages
-        fetchMessages();
-    
-        // Start debounced polling for new messages
-        scheduleFetch();
-    }
-    
-    function scheduleFetch() {
-        if (fetchTimeout) {
-            clearTimeout(fetchTimeout);
-        }
-        fetchTimeout = setTimeout(fetchMessages, DEBOUNCE_DELAY);
-    }
-    
-    function fetchMessages() { 
-        const now = Date.now();
-        if (now - lastFetchTime < MIN_FETCH_INTERVAL) {
-            // If it's too soon since the last fetch, schedule another attempt
+        function loadChat(username) {
+            currentReceiver = username;
+            document.getElementById('chat-with').textContent = username;
+            document.getElementById('chat-avatar').textContent = username.charAt(0).toUpperCase();
+            document.getElementById('chat-box').innerHTML = '';
+            lastMessageTimestamp = null;
+            
+            if (fetchTimeout) {
+                clearTimeout(fetchTimeout);
+            }
+        
+            fetchMessages();
             scheduleFetch();
-            return;
         }
-    
-        lastFetchTime = now;
-    
-        const url = lastMessageTimestamp 
-            ? `/fetch-messages/${currentReceiver}/?after=${encodeURIComponent(lastMessageTimestamp)}`
-            : `/fetch-messages/${currentReceiver}/`;
-    
-        fetch(url)
+        
+        function scheduleFetch() {
+            if (fetchTimeout) {
+                clearTimeout(fetchTimeout);
+            }
+            fetchTimeout = setTimeout(fetchMessages, DEBOUNCE_DELAY);
+        }
+        
+        function fetchMessages() { 
+            const now = Date.now();
+            if (now - lastFetchTime < MIN_FETCH_INTERVAL) {
+                scheduleFetch();
+                return;
+            }
+        
+            lastFetchTime = now;
+        
+            const url = lastMessageTimestamp 
+                ? `/fetch-messages/${currentReceiver}/?after=${encodeURIComponent(lastMessageTimestamp)}`
+                : `/fetch-messages/${currentReceiver}/`;
+        
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(message => {
+                        appendMessage(message);
+                        lastMessageTimestamp = message.timestamp;
+                    });
+                    if (!lastMessageTimestamp && data.length > 0) {
+                        lastMessageTimestamp = data[data.length - 1].timestamp;
+                    }
+                    scrollToBottom();
+                    scheduleFetch();
+                })
+                .catch(error => {
+                    console.error('Error loading messages:', error);
+                    scheduleFetch();
+                });
+        }
+        
+        document.getElementById('send-button').addEventListener('click', sendMessage);
+        document.getElementById('message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        function sendMessage() {
+            if (!currentReceiver) {
+                alert('Please select a user to chat with first.');
+                return;
+            }
+            const messageInput = document.getElementById('message-input');
+            const content = messageInput.value.trim();
+        
+            if (content === '') return;
+        
+            fetch(`/send-message/${currentReceiver}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ content: content })
+            })
             .then(response => response.json())
             .then(data => {
-                data.forEach(message => {
-                    appendMessage(message);
-                    lastMessageTimestamp = message.timestamp;
-                });
-                if (!lastMessageTimestamp && data.length > 0) {
-                    lastMessageTimestamp = data[data.length - 1].timestamp;
+                if (data.status === 'success') {
+                    appendMessage(data.message);
+                    messageInput.value = '';
+                    lastMessageTimestamp = data.message.timestamp;
+                    scheduleFetch();
+                } else {
+                    console.error('Error sending message:', data.error);
                 }
-                scrollToBottom();
-                scheduleFetch(); // Schedule next fetch
             })
-            .catch(error => {
-                console.error('Error loading messages:', error);
-                scheduleFetch(); // Retry on error
-            });
-    }
-    
-    document.getElementById('chat-form').addEventListener('submit', function(event) {
-        event.preventDefault();
-        if (!currentReceiver) {
-            alert('Please select a user to chat with first.');
-            return;
+            .catch(error => console.error('Error:', error));
         }
-        sendMessage();
-    });
-    
-    function sendMessage() {
-        const messageInput = document.getElementById('message-input');
-        const content = messageInput.value.trim();
-    
-        if (content === '') return;
-    
-        fetch(`/send-message/${currentReceiver}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify({ content: content })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                appendMessage(data.message);
-                messageInput.value = '';
-                lastMessageTimestamp = data.message.timestamp;
-                scheduleFetch(); // Trigger a fetch after sending a message
-            } else {
-                console.error('Error sending message:', data.error);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-    
-    function appendMessage(message) {
-        const chatBox = document.getElementById('chat-box');
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message';
-        messageDiv.style.textAlign = message.sender === currentUser ? 'right' : 'left';
-        messageDiv.innerHTML = `
-            <div style="display: inline-block; max-width: 70%; padding: 10px; border-radius: 10px; background-color: ${message.sender === currentUser ? '#007bff' : '#f1f1f1'}; color: ${message.sender === currentUser ? 'white' : 'black'};">
-                <p style="margin: 0;">${message.content}</p>
-                <small class="text-muted">${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
-            </div>
-        `;
-        chatBox.appendChild(messageDiv);
-        scrollToBottom();
-    }
-    
-    function scrollToBottom() {
-        const chatBox = document.getElementById('chat-box');
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    
-    // Make sure to set the current user's username in your template
-    const currentUser = '{{ request.user.username }}';
-</script>
-{% endblock main_content %} 
+        
+        function appendMessage(message) {
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${message.sender === currentUser ? 'message-sent' : 'message-received'}`;
+            messageDiv.innerHTML = `
+                <p>${message.content}</p>
+                <small>${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+            `;
+            chatBox.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        
+        const currentUser = '{{ request.user.username }}';
+    </script>
+</body>
+</html>

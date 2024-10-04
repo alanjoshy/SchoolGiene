@@ -10,7 +10,11 @@ class Message(models.Model):
     receiver = models.ForeignKey(SchoolUser, on_delete=models.CASCADE, related_name='received_messages')
     content = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
-
+    status = models.CharField(max_length=20, choices=[
+        ('PENDING', 'Pending'),
+        ('SENT', 'Sent'),
+        ('FAILED', 'Failed')
+    ], default='PENDING')
     def __str__(self):
         return f"Message from {self.sender.username} to {self.receiver.username} at {self.timestamp}"
 

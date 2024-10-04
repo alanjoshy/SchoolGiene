@@ -6,11 +6,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Forgot Password</title>
+    <title>Enter Reset Code</title>
 
     <!-- Font Icon -->
     <link rel="stylesheet" href="{% static 'fonts/material-icon/css/material-design-iconic-font.min.css' %}">
-    
+
     <!-- Main css -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -18,40 +18,45 @@
 <body>
 
     <div class="main">
+        <!-- Reset Code Form -->
         <section class="sign-in">
             <div class="container">
                 <div class="signin-content">
                     <div class="signin-form">
-                        <h2 class="form-title">Forgot Password</h2>
-                        
-                        <form method="POST" action="{% url 'staff_forgot_password_request' %}">
+                        <h2 class="form-title">Enter Reset Code</h2>
+
+                        <form method="POST" action="{% url 'enter_reset_code' %}" class="register-form" id="reset-code-form">
                             {% csrf_token %}
                             <div class="form-group">
                                 <label for="email"><i class="zmdi zmdi-email"></i></label>
                                 <input type="email" name="email" id="email" placeholder="Enter your email" required />
                             </div>
-                            
-                            <!-- Display error or success messages if any -->
+
+                            <div class="form-group">
+                                <label for="reset_code"><i class="zmdi zmdi-lock"></i></label>
+                                <input type="text" name="reset_code" id="reset_code" placeholder="Enter reset code" required />
+                            </div>
+
+                            <!-- Displaying messages (error/success) -->
                             {% if messages %}
-                                <div class="form-group">
+                                <div class="message-container">
                                     {% for message in messages %}
-                                        <p>{{ message }}</p>
+                                        <p class="{% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</p>
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                            
+
                             <div class="form-group form-button">
-                                <input type="submit" class="form-submit" value="Send Reset Code" />
+                                <input type="submit" class="form-submit" value="Submit" />
                             </div>
                         </form>
 
-                        <!-- Home Button -->
-                        <form action="{% url 'home' %}">
+                        <!-- Home button -->
+                        <form action="{% url 'home' %}" method="get">
                             <div class="form-group form-button">
                                 <input type="submit" class="form-submit" value="Home" />
                             </div>
                         </form>
-
                     </div>
                 </div>
             </div>

@@ -16,6 +16,14 @@ from django.core.mail import send_mail
 from django.urls import reverse
 import random
 import string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
+from django.template.loader import render_to_string
+from .forms import ForgotPasswordForm
+from django.utils.encoding import force_bytes
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.hashers import make_password
 
 
 # cache
@@ -493,45 +501,77 @@ def staff_feedback(request):
     
     return render(request, 'staff_templates/staff_feedback_template.html', context) 
 
-def forgot_password_request(request):
+def staff_forgot_password_request(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        
-        try:
-            # Check if the user with the provided username exists
-            user = SchoolUser.objects.get(username=username)
+        email = request.POST.get('email')
+        user = SchoolUser.objects.filter(email=email).first()
+
+        if user:
+            # Generate a random reset code (6-digit number or alphanumeric token)
+            reset_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            user.forgot_password = reset_code
+            user.email_token = reset_code  # Store the token in the DB (optional)
+            user.save()
+
+            # Send email to user with the reset code
+            send_mail(
+                'Password Reset Code',
+                f'Your password reset code is {reset_code}.',
+                'from@example.com',
+                [user.email],
+                fail_silently=False,
+            )
             
-            # Redirect to password reset form with the username
-            return redirect('reset_password', username=username)
+            messages.success(request, 'A password reset code has been sent to your email.')
+            return redirect('enter_reset_code')  # Redirect to the page where the code is entered
+        else:
+            messages.error(request, 'Email does not exist in our system.')
+    
+    return render(request, 'staff_templates/forgot_password_request.html')
 
-        except SchoolUser.DoesNotExist:
-            messages.error(request, 'Invalid username. Please try again.')
-
-    return render(request, 'staff_templates/forgot_password_request.html') 
 
 
-def reset_password(request, username):
-    try:
-        # Get the user with the provided username
-        user = SchoolUser.objects.get(username=username)
 
-        if request.method == 'POST':
-            new_password = request.POST.get('new_password')
-            confirm_password = request.POST.get('confirm_password')
+def reset_password(request):
+    email = request.session.get('email')  # Get email from session
+    
+    if not email:
+        messages.error(request, 'No email found in session.')
+        return redirect('enter_reset_code')
 
-            if new_password == confirm_password:
-                # Set the new password
-                user.set_password(new_password)
-                user.save()
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if new_password == confirm_password:
+            user = SchoolUser.objects.get(email=email)
+            user.password = make_password(new_password)  # Hash the new password
+            user.forgot_password = ''  # Clear the reset code after successful reset
+            user.save()
 
-                messages.success(request, 'Password reset successful. You can now log in.')
-                return redirect('staff_login')
+            messages.success(request, 'Password reset successful. Please log in.')
+            return redirect('staff_login')  # Redirect to login after success
+        else:
+            messages.error(request, 'Passwords do not match.')
+    
+    return render(request, 'staff_templates/reset_password.html')
 
-            else:
-                messages.error(request, 'Passwords do not match.')
 
-        return render(request, 'staff_templates/reset_password.html', {'username': username})
-
-    except SchoolUser.DoesNotExist:
-        messages.error(request, 'User does not exist.')
-        return redirect('forgot_password_request') 
+def enter_reset_code(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        reset_code = request.POST.get('reset_code')
+        
+        # Verify if user exists and reset code matches
+        user = SchoolUser.objects.filter(email=email, forgot_password=reset_code).first()
+        
+        if user:
+           
+            request.session['email'] = email  
+            return redirect('reset_password')  
+        else:
+            
+            messages.error(request, 'Invalid email or reset code.')
+            return render(request, 'staff_templates/enter_reset_code.html')
+    
+    return render(request, 'staff_templates/enter_reset_code.html')

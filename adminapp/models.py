@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-
+from datetime import timedelta
 
 
 # Create your models here.
@@ -28,6 +28,8 @@ class SchoolUser(AbstractUser):
     role = models.CharField(max_length=100, choices=designation, default='student')
     address = models.CharField(max_length=250, blank=True, null=True)
     is_approved = models.BooleanField(default=False)
+    reset_token = models.CharField(max_length=100, blank=True, null=True)
+    reset_token_expiry = models.DateTimeField(blank=True, null=True)
     
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
@@ -37,6 +39,19 @@ class SchoolUser(AbstractUser):
 
     def __str__(self):
         return self.username 
+    
+    def generate_reset_token(self):
+        # Generates a token and sets its expiry (e.g., 1 hour from now)
+        import uuid
+        self.reset_token = str(uuid.uuid4())
+        self.reset_token_expiry = timezone.now() + timedelta(hours=1)
+        self.save()
+
+    def is_reset_token_valid(self, token):
+        # Checks if the token is valid (exists and hasn't expired)
+        if self.reset_token == token and self.reset_token_expiry > timezone.now():
+            return True
+        return False
 
 class Course(models.Model):
     name = models.CharField(max_length=200)
