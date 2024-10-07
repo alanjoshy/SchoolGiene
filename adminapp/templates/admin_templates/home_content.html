@@ -64,6 +64,20 @@
           <a href="{% url 'manage_subject' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
         </div>
       </div>
+      <!-- fee collection -->
+      <div class="col-lg-3 col-6">
+        <!-- small box -->
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h3>₹ {{ total_amount_paid }}/-</h3>
+            <p>fee received</p>
+          </div>
+          <div class="icon">
+            <i class="ion ion-stats-bars"></i>
+          </div>
+          <a href="{% url 'manage_fee' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+      </div>
       <!-- ./col -->
     </div>
     <!-- /.row -->
@@ -125,7 +139,7 @@
           </div>
           <div class="card-body">
               <!-- Bar Chart Container -->
-              <div id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
+              <div id="barChart1" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></div>
           </div>
       </div>
       
@@ -177,7 +191,7 @@
         type: 'bar'  // Change to 'bar' for bar chart
       },
       plotOptions: {
-        bar: {
+        bar: { 
           columnWidth: '20%',  // Set the width of the bars
           distributed: true  // Different colors for each bar
         }
@@ -223,8 +237,8 @@
     var chart2 = new ApexCharts(document.querySelector("#donutChart"), options2);
     chart2.render();
 
-    var courseNames = JSON.parse('{{ course_names|escapejs }}');
-    var studentCounts = JSON.parse('{{ student_counts|escapejs }}');
+    var courseNames = {{ course_names|safe }};  // Use 'safe' to prevent escaping of array
+    var studentCounts = {{ student_counts|safe }}; 
 
     // Bar Chart options
     var optionsBarChart = {
@@ -239,7 +253,7 @@
         plotOptions: {
             bar: {
                 horizontal: false,
-                columnWidth: '50%',
+                columnWidth: '30%',
                 endingShape: 'rounded'
             },
         },
@@ -264,25 +278,41 @@
     };
 
     // Render the bar chart in the specified container
-    var chartBar = new ApexCharts(document.querySelector("#barChart"), optionsBarChart);
+    var chartBar = new ApexCharts(document.querySelector("#barChart1"), optionsBarChart);
     chartBar.render();
 
-    // Pie Chart for Total Students in Each Subject
-    var options4 = {
-      series: [10, 20, 30, 40, 50], // Update with actual data
-      chart: {
-        height: 350,
-        type: 'pie'
-      },
-      labels: ['Subject 1', 'Subject 2', 'Subject 3', 'Subject 4', 'Subject 5'],
-      title: {
-        
-        align: 'left'
-      }
-    };
+      // Data passed from the Django view (from the backend)
+      var subjectLabels = {{ subject_data.labels|safe }};  // This contains subject names
+      var studentCounts = {{ subject_data.data|safe }};    // This contains the count of students in each subject
 
-    var chart4 = new ApexCharts(document.querySelector("#pieChart3"), options4);
-    chart4.render();
+      // Updated ApexCharts pie chart options
+      var options4 = {
+          series: studentCounts,  // Use actual data passed from the view
+          chart: {
+              height: 350,
+              type: 'pie'
+          },
+          labels: subjectLabels,  // Use actual subject names
+          title: {
+              text: 'Total Students per Subject',
+              align: 'center'
+          },
+          responsive: [{
+              breakpoint: 480,
+              options: {
+                  chart: {
+                      width: 300
+                  },
+                  legend: {
+                      position: 'bottom'
+                  }
+              }
+          }]
+      };
+
+      // Initialize and render the chart
+      var chart4 = new ApexCharts(document.querySelector("#pieChart3"), options4);
+      chart4.render();
   }); 
 </script>
 {% endblock custom_js %}

@@ -19,6 +19,9 @@ from paymentapp.models import Payment,Fee
 import datetime
 from django.db import transaction
 from decimal import Decimal
+from django.db.models import Sum
+from django.db.models import Count  
+
 
 # cache
 def clear_all_cache():
@@ -99,14 +102,36 @@ def admin_dashboard(request):
             "student_count": student_in_course_count
         })
 
+     # Get all courses and count the number of students in each course
+    course_data = Course.objects.annotate(student_count=Count('students')).values('name', 'student_count')
+
+    # Prepare the data for ApexCharts (list of course names and corresponding student counts)
+    course_names = [course['name'] for course in course_data]
+    student_counts = [course['student_count'] for course in course_data]
+    
     # Subject count
     subject_count = Subject.objects.all().count()
 
     # Prepare the course names and student counts for passing to the template
     course_names = [course['course_name'] for course in course_student_counts]
     student_counts = [course['student_count'] for course in course_student_counts]
+    
+    # total fee collected
+    total_amount_paid = Fee.objects.filter(is_paid=True).aggregate(total=Sum('amount'))['total'] or 0
+
+    subjects = Subject.objects.annotate(student_count=Count('students'))
+    
+    # Prepare data for the chart
+    subject_data = {
+        'labels': [subject.name for subject in subjects],
+        'data': [subject.student_count for subject in subjects]
+    }
 
     context = {
+        'subject_data': subject_data,
+        'course_names': course_names,
+        'student_counts': student_counts,
+        'total_amount_paid': total_amount_paid,
         "student_count": student_count,
         "staff_count": staff_count,
         "course_count": course_count,
