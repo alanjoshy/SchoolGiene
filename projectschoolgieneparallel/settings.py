@@ -17,7 +17,7 @@ SECRET_KEY = 'django-insecure-ov7hjg58rdfr%w7$w2l%vyqb3u*lo_%(d$jv^*v+78@gc7lc0u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['13.201.44.207']
+ALLOWED_HOSTS = ['*'] 
 
 AUTH_USER_MODEL = 'adminapp.SchoolUser'
 
